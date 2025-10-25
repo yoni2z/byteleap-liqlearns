@@ -1,0 +1,92 @@
+<h1>Manage Content for Slide: {{ slide.title }}</h1>
+
+<!-- Form to Add Content -->
+<h2>Add New Content</h2>
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <label for="id_content_type">Content Type:</label>
+  {{ content_form.content_type }}
+  <div id="text-field" style="display: none">
+    <label for="id_text_content">Text Content:</label>
+    {{ content_form.text_content }}
+  </div>
+  <div id="image-field" style="display: none">
+    <label for="id_image_content">Image Content:</label>
+    {{ content_form.image_content }}
+  </div>
+  <div id="video-field" style="display: none">
+    <label for="id_video_content">Video URL:</label>
+    {{ content_form.video_content }}
+  </div>
+  <label for="id_order">Order:</label>
+  {{ content_form.order }}
+  <button type="submit" class="btn btn-primary">Add Content</button>
+</form>
+
+<!-- Form to Add Question for the Slide -->
+<h2>Add Question for Slide</h2>
+<form method="post">
+  {% csrf_token %}
+  <label for="id_question_text">Question Text:</label>
+  {{ question_form.question_text }}
+  <label for="id_choice1">Choice 1:</label>
+  {{ question_form.choice1 }}
+  <label for="id_choice2">Choice 2:</label>
+  {{ question_form.choice2 }}
+  <label for="id_choice3">Choice 3:</label>
+  {{ question_form.choice3 }}
+  <label for="id_choice4">Choice 4:</label>
+  {{ question_form.choice4 }}
+  <label for="id_correct_answer">Correct Answer (1-4):</label>
+  {{ question_form.correct_answer }}
+  <button type="submit" class="btn btn-primary">Add Question</button>
+</form>
+
+<!-- List of Existing Slide Contents -->
+<h2>Slide Contents Overview</h2>
+<ul>
+  {% for content in contents %}
+  <li>
+    <p><strong>Content Type:</strong> {{ content.content_type }}</p>
+    {% if content.content_type == "Text" %}
+    <p><strong>Text Content:</strong> {{ content.text_content }}</p>
+    {% elif content.content_type == "Image" %}
+    <p><strong>Image:</strong></p>
+    <img
+      src="{{ content.image_content.url }}"
+      alt="Slide Image"
+      style="max-width: 200px; max-height: 100px"
+    />
+    {% elif content.content_type == "Video" %}
+    <p><strong>Video:</strong></p>
+    <a href="{{ content.video_content.url }}" target="_blank">View Video</a>
+    {% endif %}
+    <p><strong>Display Order:</strong> {{ content.order }}</p>
+  </li>
+  <hr>
+  {% empty %}
+  <li>No content has been added to this slide yet.</li>
+  {% endfor %}
+</ul>
+
+<!-- JavaScript to Handle Dynamic Fields -->
+<script>
+  const contentTypeField = document.getElementById("id_content_type");
+  const textField = document.getElementById("text-field");
+  const imageField = document.getElementById("image-field");
+  const videoField = document.getElementById("video-field");
+
+  function updateFields() {
+    textField.style.display =
+      contentTypeField.value === "Text" ? "block" : "none";
+    imageField.style.display =
+      contentTypeField.value === "Image" ? "block" : "none";
+    videoField.style.display =
+      contentTypeField.value === "Video" ? "block" : "none";
+  }
+
+  contentTypeField.addEventListener("change", updateFields);
+
+  // Initialize fields on page load
+  updateFields();
+</script>

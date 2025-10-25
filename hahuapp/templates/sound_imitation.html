@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Sound Imitation Activity</h1>
+    <h3 class="text-center mb-3">Mimic the sound of the letter</h3>
+    <h4 class="text-center mb-4">Judge yourself by comparing your voice with the original one</h4>
+
+    <div class="text-center mt-4">
+        <audio id="letterSound" src="{{ letter_sound.sound_field.url }}" preload="auto"></audio>
+        <button id="playSound" class="btn btn-primary btn-lg" onclick="document.getElementById('letterSound').play();">Play Sound</button>
+    </div>
+
+    <div class="text-center mt-5">
+        <h5>Record Your Imitation:</h5>
+        <button id="startRecording" class="btn btn-success btn-lg">Start Recording</button>
+        <button id="stopRecording" class="btn btn-danger btn-lg" disabled>Stop Recording</button>
+    </div>
+
+    <div class="text-center mt-4">
+        <h5>Your Recording:</h5>
+        <audio id="userRecording" controls class="mt-2"></audio>
+    </div>
+
+    <div class="text-center mt-4">
+        <p class="text-muted">Tip: Listen to the original sound before you start recording!</p>
+    </div>
+
+    <script>
+        let mediaRecorder;
+        let recordedChunks = [];
+
+        // Start recording
+        document.getElementById('startRecording').onclick = async () => {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+
+            mediaRecorder.ondataavailable = event => {
+                recordedChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'audio/wav' });
+                const url = URL.createObjectURL(blob);
+                document.getElementById('userRecording').src = url;
+                recordedChunks = []; // Reset for next recording
+            };
+
+            mediaRecorder.start();
+            document.getElementById('startRecording').disabled = true;
+            document.getElementById('stopRecording').disabled = false;
+        };
+
+        // Stop recording
+        document.getElementById('stopRecording').onclick = () => {
+            mediaRecorder.stop();
+            document.getElementById('startRecording').disabled = false;
+            document.getElementById('stopRecording').disabled = true;
+        };
+    </script>
+</div>
+{% endblock %}
+ 

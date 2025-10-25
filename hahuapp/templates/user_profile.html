@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Profile - E-Learning Platform</title>
+    <style>
+      body {
+        font-family: "Comic Sans MS", "Chalkboard SE", sans-serif;
+        background: linear-gradient(to bottom, #ffefd5, #ffe4b5);
+        margin: 0;
+        padding: 0;
+        color: #444;
+      }
+      .container {
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 20px;
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        text-align: center;
+      }
+      h2 {
+        text-align: center;
+        color: #ff5722;
+        font-size: 2em;
+        margin-bottom: 20px;
+        text-shadow: 2px 2px 5px #ffae42;
+      }
+      .info {
+        margin-bottom: 20px;
+      }
+      .info label {
+        font-weight: bold;
+        display: block;
+        margin-bottom: 5px;
+        font-size: 1.1em;
+        color: #673ab7;
+      }
+      .info p {
+        background: #e3f2fd;
+        padding: 15px;
+        border-radius: 10px;
+        font-size: 1em;
+        color: #333;
+        box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+      }
+      a {
+        font-weight: bold;
+        text-decoration: none;
+        display: inline-block;
+        margin-top: 20px;
+        background: linear-gradient(to bottom, #ffefd5, #ffe4b5);
+        padding: 10px 20px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      a:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transform: translateY(-2px);
+      }
+      .profile-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 20px;
+        display: block;
+        border-radius: 50%;
+        background-color: #ffcc80;
+        background-image: url("https://cdn-icons-png.flaticon.com/512/3468/3468306.png");
+        background-size: cover;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="profile-icon"></div>
+      <h2>Your Profile</h2>
+      <div class="info">
+        <label>🎈 Full Name:</label>
+        <p>{{ full_name }}</p>
+      </div>
+      <div class="info">
+        <label>🏆 Rank:</label>
+        <p>{{ rank }}</p>
+      </div>
+      <div class="info">
+        <label>🌟 Level:</label>
+        <p>{{ level }}</p>
+      </div>
+      <div class="info">
+        <label>✨ Aura Points:</label>
+        <p>{{ aura_points }}</p>
+      </div>
+      <div class="info">
+        <label>🔑 Your Referral Code:</label>
+        <p>{{ referral_code }}</p>
+      </div>
+      <p style="text-align: center">
+        <a href="{% url 'logout' %}">Logout</a>
+      </p>
+    </div>
+  </body>
+</html>

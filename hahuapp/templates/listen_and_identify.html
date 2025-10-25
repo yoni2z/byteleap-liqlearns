@@ -1,0 +1,93 @@
+{% extends "base.html" %} {% block content %}
+<div class="container mt-5">
+  <div class="text-center">
+    <h2>Listen and Identify the Audio</h2>
+  </div>
+
+  <!-- Display the selected word -->
+  <div class="text-center mt-4">
+    <h3 class="display-4">{{ selected_word }}</h3>
+  </div>
+
+  <!-- Display audio choices -->
+  <div class="d-flex justify-content-center mt-4">
+    <div class="row w-50">
+      {% for choice in choices %}
+      <div class="col-6 mb-3 d-flex justify-content-center">
+        <button
+          class="btn choice-button"
+          data-audio-id="{{ choice.id }}"
+          style="
+            width: 100%;
+            background: linear-gradient(to bottom, #ffefd5, #ffe4b5);
+          "
+        >
+          <audio controls class="audio-control" style="width: 100%">
+            <source src="{{ choice.audio_file.url }}" type="audio/mpeg" />
+            Your browser does not support the audio element.
+          </audio>
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div id="feedback" class="alert text-center mt-3" style="display: none"></div>
+
+  <div class="text-center mt-4">
+    <a
+      href="{% url 'letter-story' %}"
+      id="next-button"
+      class="btn btn-success"
+      style="display: none"
+    >
+      Continue
+    </a>
+  </div>
+</div>
+
+<script>
+  const correctAudioId = "{{ correct_audio_id }}"; // Correct audio ID from the view
+  const feedback = document.getElementById("feedback");
+  const nextButton = document.getElementById("next-button");
+
+  // Add event listeners to all audio buttons
+  document.querySelectorAll(".choice-button").forEach((button) => {
+    button.addEventListener("click", () => {
+      const selectedAudioId = button.getAttribute("data-audio-id");
+
+      if (selectedAudioId === correctAudioId) {
+        // Correct guess
+        feedback.textContent = "Good work!";
+        feedback.className = "alert alert-success text-center mt-3";
+        feedback.style.display = "block";
+        nextButton.style.display = "block";
+
+        // Highlight the correct button
+        button.classList.add("btn-success");
+        button.classList.remove("btn-primary");
+
+        // Disable all buttons after a correct guess
+        disableAllButtons();
+      } else {
+        // Incorrect guess
+        feedback.textContent = "Try again!";
+        feedback.className = "alert alert-danger text-center mt-3";
+        feedback.style.display = "block";
+      }
+    });
+  });
+
+  // Disable all choice buttons
+  function disableAllButtons() {
+    document.querySelectorAll(".choice-button").forEach((button) => {
+      button.disabled = true;
+    });
+  }
+
+  // Reload the page to play again
+  nextButton.addEventListener("click", () => {
+    location.reload();
+  });
+</script>
+{% endblock %}

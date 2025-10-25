@@ -1,0 +1,201 @@
+{% extends "base.html" %} {% block content %}
+<div
+  class="container text-center d-flex flex-column justify-content-center align-items-center"
+>
+  <h2>Timed Writing Game</h2>
+
+  <p>Type the following: <strong id="target-text">{{ target_text }}</strong></p>
+  <p>Time Remaining: <span id="timer">60</span> seconds</p>
+
+  <input
+    type="text"
+    id="user-input"
+    placeholder="Start typing..."
+    disabled
+    oninput="checkTyping()"
+    oncopy="return false;"
+    oncut="return false;"
+    onpaste="return false;"
+  />
+  <div id="highlight-display"></div>
+  <!-- Display area for highlighted letters -->
+
+  <button id="start-button" onclick="startGame()">Start</button>
+  <p id="feedback"></p>
+
+  <!-- Progress Bar -->
+  <div style="margin-top: 20px">
+    <div style="background-color: #ddd; border-radius: 5px; overflow: hidden">
+      <div
+        id="progress-bar"
+        style="width: 0; height: 20px; background-color: green"
+      ></div>
+    </div>
+  </div>
+
+  <p id="success-percentage" style="margin-top: 10px; font-weight: bold"></p>
+
+  <!-- Additional buttons -->
+  <div class="button-container" style="text-align: center; margin-top: 20px">
+    <a
+      href="{% url 'listen-and-write' %}"
+      class="btn btn-outline-success"
+      id="continue-button"
+      style="display: none; width: 150px"
+    >
+      Continue
+    </a>
+    <a
+      href="javascript:void(0);"
+      class="btn btn-outline-secondary"
+      id="try-again-button"
+      style="display: none; width: 150px"
+      onclick="tryAgain()"
+    >
+      Try Again
+    </a>
+  </div>
+</div>
+
+<script>
+  let countdown;
+  const targetText = "{{ target_text }}";
+  const timerDisplay = document.getElementById("timer");
+  const userInput = document.getElementById("user-input");
+  const feedback = document.getElementById("feedback");
+  const startButton = document.getElementById("start-button");
+  const highlightDisplay = document.getElementById("highlight-display");
+  const progressBar = document.getElementById("progress-bar");
+  const successPercentageDisplay =
+    document.getElementById("success-percentage");
+  const continueButton = document.getElementById("continue-button");
+  const tryAgainButton = document.getElementById("try-again-button");
+  let timeLeft = 60;
+
+  function startGame() {
+    userInput.value = "";
+    highlightDisplay.innerHTML = ""; // Clear previous highlights
+    feedback.textContent = "";
+    successPercentageDisplay.textContent = "";
+    userInput.disabled = false;
+    userInput.focus();
+    timeLeft = 60; // Set the time to 10 seconds
+    timerDisplay.textContent = timeLeft;
+    progressBar.style.width = "0%"; // Reset progress bar to 0%
+    startButton.style.display = "none"; // Hide the start button
+
+    countdown = setInterval(() => {
+      timeLeft--;
+      timerDisplay.textContent = timeLeft;
+
+      if (timeLeft <= 0) {
+        endGame(false);
+      }
+    }, 1000);
+  }
+
+  function checkTyping() {
+    const userGuess = userInput.value.trim();
+    highlightDisplay.innerHTML = ""; // Clear previous highlights
+    let correctCount = 0;
+
+    // Highlight each character and count correct characters
+    for (let i = 0; i < targetText.length; i++) {
+      const charSpan = document.createElement("span");
+      const userChar = userGuess[i] || ""; // Handle cases where user input is shorter
+
+      charSpan.textContent = userChar;
+
+      if (userChar === targetText[i]) {
+        charSpan.style.color = "green"; // Correct character
+        correctCount++; // Count correct character
+      } else if (userChar && userChar !== targetText[i]) {
+        charSpan.style.color = "red"; // Incorrect character
+      } else {
+        charSpan.style.color = "black"; // Placeholder for missing characters
+      }
+
+      highlightDisplay.appendChild(charSpan);
+    }
+
+    // Update progress bar based on correct characters
+    const successPercentage = (correctCount / targetText.length) * 100;
+    progressBar.style.width = `${successPercentage}%`;
+
+    // Check for success
+    if (userGuess === targetText) {
+      endGame(true);
+    }
+  }
+
+  function endGame(success) {
+    clearInterval(countdown);
+    userInput.disabled = true;
+
+    // Calculate final success percentage
+    const finalSuccessCount = Array.from(userInput.value.trim()).reduce(
+      (count, char, index) => {
+        return count + (char === targetText[index] ? 1 : 0);
+      },
+      0
+    );
+    const finalSuccessPercentage = (
+      (finalSuccessCount / targetText.length) *
+      100
+    ).toFixed(2); // Format to 2 decimal places
+
+    if (success) {
+      feedback.textContent = "Well done! 🎉";
+      feedback.style.color = "green";
+      continueButton.style.display = "block"; // Show continue button
+    } else {
+      feedback.textContent = `Time's up! The correct text was: "${targetText}".`;
+      feedback.style.color = "red";
+      tryAgainButton.style.display = "block"; // Show try again button
+      continueButton.style.display = "block"; // Show continue button
+    }
+
+    successPercentageDisplay.textContent = `Final Success Percentage: ${finalSuccessPercentage}%`;
+  }
+
+  function tryAgain() {
+    // Reset the game without reloading
+    startGame(); // Restart the game
+    tryAgainButton.style.display = "none"; // Hide try again button
+    continueButton.style.display = "none"; // Hide continue button
+  }
+</script>
+
+<style>
+  input {
+    margin: 10px 0;
+    padding: 10px;
+    width: 80%;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+  }
+
+  #highlight-display {
+    margin: 10px 0;
+    padding: 10px;
+    width: 80%;
+    min-height: 40px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    white-space: pre-wrap; /* Ensure spaces and line breaks are preserved */
+  }
+
+  #feedback {
+    margin-top: 10px;
+    font-size: 18px;
+  }
+
+  #timer {
+    font-weight: bold;
+  }
+
+  .button-container .btn {
+    margin: 5px; /* Spacing between buttons */
+  }
+</style>
+{% endblock %}

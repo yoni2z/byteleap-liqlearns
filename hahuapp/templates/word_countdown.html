@@ -1,0 +1,84 @@
+{% extends "base.html" %} {% block content %}
+<div class="container mt-5">
+  <div class="card text-center">
+    <h2>Word Countdown</h2>
+    <div class="card-body">
+      <h5 class="card-title">
+        Record as many words as possible using the letter family of
+        "{{ letter.letter }}"
+      </h5>
+      <img
+        src="{{ letter.image.url }}"
+        class="mb-3"
+        alt="Letter Image"
+        style="width: 100px"
+      />
+
+      <form id="recordingForm" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="letter_id" value="{{ letter.id }}" />
+
+        <div class="mb-3">
+          <label for="audioFile" class="form-label"
+            >Upload your recording:</label
+          >
+          <input
+            type="file"
+            class="form-control"
+            id="audioFile"
+            name="audio_file"
+            accept="audio/*"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <audio id="audioPreview" controls hidden></audio>
+        </div>
+
+        <div class="d-flex justify-content-between">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            id="reuploadBtn"
+            hidden
+          >
+            Re-upload
+          </button>
+          <button type="submit" class="btn btn-primary" id="submitBtn" hidden>
+            Submit Recording
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  const audioFileInput = document.getElementById("audioFile");
+  const audioPreview = document.getElementById("audioPreview");
+  const submitBtn = document.getElementById("submitBtn");
+  const reuploadBtn = document.getElementById("reuploadBtn");
+
+  // Handle audio file selection
+  audioFileInput.addEventListener("change", (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const audioURL = URL.createObjectURL(file);
+      audioPreview.src = audioURL;
+      audioPreview.hidden = false;
+      submitBtn.hidden = false;
+      reuploadBtn.hidden = false;
+    }
+  });
+
+  // Handle re-upload button click
+  reuploadBtn.addEventListener("click", () => {
+    audioFileInput.value = ""; 
+    audioPreview.src = ""; 
+    audioPreview.hidden = true;
+    submitBtn.hidden = true;
+    reuploadBtn.hidden = true;
+  });
+</script>
+{% endblock %}

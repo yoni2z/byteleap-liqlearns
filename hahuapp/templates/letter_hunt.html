@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    body {
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        background-color: #f5f5f5;
+    }
+
+    .game-container {
+        position: relative;
+        width: 600px;
+        height: 400px;
+        background: linear-gradient(45deg, #d3d3d3 25%, transparent 25%) -5px 0,
+                    linear-gradient(45deg, transparent 75%, #d3d3d3 75%) -5px 0,
+                    linear-gradient(45deg, transparent 75%, #d3d3d3 75%) 0px 0,
+                    linear-gradient(45deg, #d3d3d3 25%, transparent 25%) 0px 0;
+        background-size: 40px 40px;
+        border: 2px solid black;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 10px;
+    }
+
+    .letter {
+        position: absolute;
+        font-size: 24px;
+        font-weight: bold;
+        color: red;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .target-dropzone {
+        position: absolute;
+        width: 40px; /* Adjust based on letter size */
+        height: 40px; /* Adjust based on letter size */
+        border: 2px dashed green; /* Style for drop zone */
+        display: none; /* Hide by default */
+    }
+
+    #score {
+        margin: 10px 0;
+        font-size: 20px;
+    }
+
+    .controls {
+        margin-top: 10px;
+    }
+
+    .controls button {
+        margin: 0 5px;
+        padding: 10px 15px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    .x-indicator {
+        position: absolute;
+        font-size: 18px;
+        color: red;
+        font-weight: bold;
+        display: none; /* Hidden by default */
+        pointer-events: none; /* Prevent interference with clicking letters */
+    }
+</style>
+
+<h2 class="text-center">አማርኛ መፈለጊያ ጨዋታ (Amharic Letter Hunt)</h2>
+<div id="target-word">Find all the "<span id="current-target">አ</span>"s!</div>
+<div class="game-container" id="game-container"></div>
+<div id="score">Score: 0</div>
+
+<div class="controls">
+    <button id="refresh-btn">Refresh Letters</button>
+    <button id="next-round-btn">Next Round</button>
+</div>
+
+<script>
+    let score = 0;
+    let round = 0;
+
+    const targets = ["አ", "ሰ", "መ", "ሐ", "ን"]; 
+    const letters = ["አ", "ሰ", "መ", "ሐ", "ል", "ግ", "ታ", "ን", "ሀ", "ነ", "ጌ", "ላ", "ተ", "ገ", "ወ", "እ", "ፍ", "ለ", "ዋ", "ደ", "ረ", "ክ", "ዘ", "ጻ", "ር", "ህ", "ሎ", "ገ", "ጸ", "ዳ"];  
+
+    const gameContainer = document.getElementById('game-container');
+    const scoreDisplay = document.getElementById('score');
+    const targetWordDisplay = document.getElementById('current-target');
+    const nextRoundBtn = document.getElementById('next-round-btn');
+    const refreshBtn = document.getElementById('refresh-btn');
+
+    function scatterLetters() {
+        gameContainer.innerHTML = "";  
+        const numberOfLetters = 30;
+        const positions = [];  
+        const minDistance = 50;  
+
+        for (let i = 0; i < numberOfLetters; i++) {
+            let position;
+            let validPosition = false;
+            let attempts = 0;
+
+            while (!validPosition && attempts < 100) {
+                const top = Math.floor(Math.random() * (gameContainer.clientHeight - 40));  
+                const left = Math.floor(Math.random() * (gameContainer.clientWidth - 40));  
+                position = { top, left };
+
+                validPosition = positions.every(pos => {
+                    const distance = Math.sqrt(Math.pow(pos.top - position.top, 2) + Math.pow(pos.left - position.left, 2));
+                    return distance >= minDistance;  
+                });
+
+                attempts++;
+            }
+
+            if (validPosition) {
+                positions.push(position);  
+
+                const letter = document.createElement('span');
+                letter.classList.add('letter');
+                letter.textContent = letters[Math.floor(Math.random() * letters.length)];
+                letter.draggable = true;  // Make the letter draggable
+                letter.style.top = `${position.top}px`;
+                letter.style.left = `${position.left}px`;
+                gameContainer.appendChild(letter);
+
+                // Add drag event listeners to each letter
+                letter.addEventListener('dragstart', (event) => {
+                    event.dataTransfer.setData("text/plain", letter.textContent);
+                    letter.style.opacity = '0.5';  // Visual feedback while dragging
+                });
+
+                letter.addEventListener('dragend', () => {
+                    letter.style.opacity = '1';  // Reset opacity when done dragging
+                });
+
+                // Add drop zone
+                const dropZone = document.createElement('div');
+                dropZone.classList.add('target-dropzone');
+                dropZone.style.top = `${position.top}px`;  // Same position as letter
+                dropZone.style.left = `${position.left}px`;
+                dropZone.style.display = 'block'; // Show drop zone
+                gameContainer.appendChild(dropZone);
+
+                dropZone.addEventListener('dragover', (event) => {
+                    event.preventDefault();  // Allow drop
+                });
+
+                dropZone.addEventListener('drop', (event) => {
+                    event.preventDefault(); // Prevent default action
+                    const draggedLetter = event.dataTransfer.getData("text/plain");
+                    console.log(`Dropped letter: ${draggedLetter}`); // Debug log
+
+                    if (draggedLetter === targets[round]) {
+                        score++;
+                        letter.style.color = 'green';  
+                        letter.style.pointerEvents = 'none';  
+                        dropZone.style.display = 'none';  // Hide drop zone when letter is found
+                    } else {
+                        letter.style.color = 'gray';  
+                        showXIndicator(letter);  
+                    }
+                    scoreDisplay.textContent = `Score: ${score}`;
+                });
+            } else {
+                i--;  
+            }
+        }
+    }
+
+    function showXIndicator(letter) {
+        const xIndicator = document.createElement('span');
+        xIndicator.textContent = 'X';
+        xIndicator.classList.add('x-indicator');
+        xIndicator.style.top = `${parseInt(letter.style.top) + 20}px`; 
+        xIndicator.style.left = `${letter.style.left}`;
+        gameContainer.appendChild(xIndicator);
+
+        xIndicator.style.display = 'block';
+
+        setTimeout(() => {
+            xIndicator.remove();
+        }, 1000);
+    }
+
+    function startRound() {
+        score = 0;  
+        scoreDisplay.textContent = `Score: ${score}`;
+        targetWordDisplay.textContent = targets[round];  
+        scatterLetters();  
+    }
+
+    nextRoundBtn.addEventListener('click', function () {
+        if (round < targets.length - 1) {
+            round++;
+            startRound();  
+        } else {
+            alert("ሁሉንም ዙሮች አጠናቀሃል! (You completed all rounds!)");
+        }
+    });
+
+    refreshBtn.addEventListener('click', scatterLetters);
+
+    startRound();
+</script>
+{% endblock %}

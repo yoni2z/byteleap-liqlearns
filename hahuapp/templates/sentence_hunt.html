@@ -1,0 +1,229 @@
+{% extends "base.html" %} {% block content %}
+
+<div class="container mt-5">
+  <h1 class="text-center mb-4">Sentence Hunt Game</h1>
+  <p class="text-center">Select the words to form the sentences:</p>
+
+  <!-- Word Grid -->
+  <div class="row row-cols-2 row-cols-md-4 g-3" id="word-grid">
+    {% for word in words %}
+    <div class="col">
+      <div class="card text-center word p-3" onclick="selectWord(this)">
+        {{ word }}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="mt-4">
+    <h2>Currently Formed Sentence:</h2>
+    <div class="alert alert-secondary" id="current-sentence"></div>
+
+    <h2>Selected Sentences:</h2>
+    <ul class="list-group" id="selected-sentences">
+      {% for sentence in selected_sentences %}
+      <li class="list-group-item">{{ sentence.sentence }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="mt-3 d-flex justify-content-center">
+    <button class="btn btn-primary me-2" onclick="checkSentences()">
+      Submit
+    </button>
+    <a
+    href="{% url 'sentence-matching' %}"
+      class="btn btn-success d-none"
+      id="continue-btn"
+    >
+      Continue
+    </a>
+  </div>
+
+  <div class="result mt-4" id="result"></div>
+
+  <div class="hidden" id="game-over" style="display: none">
+    <h2 class="text-center mt-5">Congratulations!</h2>
+    <p class="text-center">You have found all the sentences!</p>
+  </div>
+</div>
+
+<script>
+  let selectedWords = [];
+  const correctSentences = [{% for sentence in selected_sentences %}'{{ sentence.sentence | escapejs }}',{% endfor %}];
+  const foundSentences = [];
+
+  function normalizeText(text) {
+      return text.trim().toLowerCase();
+  }
+
+  function selectWord(element) {
+      if (!element.classList.contains('correct')) {
+          element.classList.toggle('selected');
+          const word = element.textContent.trim();
+
+          if (selectedWords.includes(word)) {
+              selectedWords = selectedWords.filter(w => w !== word);
+          } else {
+              selectedWords.push(word);
+          }
+          updateCurrentSentence();
+      }
+  }
+
+  function updateCurrentSentence() {
+      document.getElementById('current-sentence').textContent = selectedWords.join(' ');
+  }
+
+  function checkSentences() {
+      const selectedSentence = normalizeText(selectedWords.join(' '));
+      let resultText = '';
+
+      if (correctSentences.some(sentence => normalizeText(sentence) === selectedSentence)) {
+          resultText = `Congratulations! You found a correct sentence: "${selectedSentence}"`;
+          foundSentences.push(selectedSentence);
+
+          disableSelectedWords();
+          clearSelectedWords();
+
+          if (foundSentences.length === correctSentences.length) {
+              showContinueButton();
+          }
+      } else {
+          resultText = 'Sorry, that is not a correct sentence.';
+          highlightIncorrectWords();
+      }
+
+      document.getElementById('result').innerText = resultText;
+      updateDisplayedSentences();
+  }
+
+  function disableSelectedWords() {
+      selectedWords.forEach(word => {
+          const wordElements = document.querySelectorAll('.word');
+          wordElements.forEach(el => {
+              if (normalizeText(el.textContent) === word) {
+                  el.classList.add('correct');
+                  el.onclick = null;
+              }
+          });
+      });
+  }
+
+  function highlightIncorrectWords() {
+      const wordElements = document.querySelectorAll('.word');
+
+      wordElements.forEach(el => {
+          if (selectedWords.includes(el.textContent.trim())) {
+              el.classList.add('incorrect');
+          }
+      });
+
+      const incorrectSentenceDisplay = selectedWords
+          .map(word => `<span class="incorrect">${word}</span>`)
+          .join(' ');
+
+      document.getElementById('current-sentence').innerHTML = incorrectSentenceDisplay;
+
+      setTimeout(() => {
+          wordElements.forEach(el => el.classList.remove('incorrect'));
+          document.getElementById('current-sentence').textContent = selectedWords.join(' ');
+      }, 2000);
+  }
+
+  function updateDisplayedSentences() {
+      const displayedSentences = document.getElementById('selected-sentences');
+      displayedSentences.innerHTML = '';
+      foundSentences.forEach(sentence => {
+          const li = document.createElement('li');
+          li.textContent = sentence;
+          displayedSentences.appendChild(li);
+      });
+  }
+
+  function clearSelectedWords() {
+      selectedWords = [];
+      updateCurrentSentence();
+  }
+
+  function showContinueButton() {
+      document.getElementById('continue-btn').classList.remove('d-none');
+      document.getElementById('game-over').style.display = 'block';
+      document.getElementById('word-grid').style.display = 'none';
+  }
+
+  function adjustGrid() {
+      const grid = document.querySelector('.grid');
+      const numWords = {{ words | length }};
+      const cols = Math.ceil(Math.sqrt(numWords));
+      grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  }
+
+  window.onload = adjustGrid;
+</script>
+
+<style>
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .word {
+    padding: 20px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.3s;
+  }
+
+  .word:hover {
+    background-color: #f0f0f0;
+  }
+
+  .selected {
+    background-color: #6c757d;
+    color: white;
+  }
+
+  .correct {
+    background-color: #d4edda;
+    color: white;
+    cursor: not-allowed;
+  }
+
+  .incorrect {
+    background-color: #f8d7da;
+    color: white;
+    transition: background-color 0.5s;
+  }
+
+  .result {
+    margin-top: 20px;
+  }
+
+  .current-sentence {
+    font-size: 1.2em;
+    margin-top: 20px;
+  }
+
+  .continue-btn {
+    display: none;
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+
+  .continue-btn:hover {
+    background-color: #0056b3;
+  }
+</style>
+
+{% endblock %}

@@ -1,0 +1,226 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container mt-5">
+  <h2 class="text-center fw-bold">Sentence Matching</h2>
+  <h4 class="text-center">
+    Please match each Amharic sentence with its corresponding English
+    translation.
+  </h4>
+
+  <div class="row">
+    <div class="col-md-6">
+      <h4>English Sentences</h4>
+      <ul id="amharic-list" class="list-group">
+        {% for sentence in selected_sentences %}
+        <li
+          id="amharic-item"
+          class="list-group-item amharic-item"
+          data-sentence="{{ sentence.english_sentence }}"
+          onclick="selectSentence(this)"
+        >
+          {{ sentence.english_sentence }}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="col-md-6">
+      <h4>Amharic Sentences</h4>
+      <ul id="english-list" class="list-group">
+        {% for definition in definitions %}
+        <li
+          id="english-item"
+          class="list-group-item english-item"
+          data-definition="{{ definition }}"
+          onclick="selectDefinition(this)"
+        >
+          {{ definition }}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <button
+    id="submit-btn"
+    class="btn btn-primary mt-4"
+    onclick="submitAnswers()"
+  >
+    Submit
+  </button>
+  <button
+    id="try-again-btn"
+    class="btn btn-secondary mt-4 d-none"
+    onclick="tryAgain()"
+  >
+    Try Again
+  </button>
+
+  <p
+    id="feedback"
+    class="mt-3 text-center alert alert-success"
+    style="display: none"
+  ></p>
+
+  <div class="progress mt-4" style="height: 30px; width: 60%; margin: 0 auto">
+    <div
+      id="progress-bar"
+      class="progress-bar progress-bar-striped"
+      role="progressbar"
+      style="width: 0%"
+      aria-valuemin="0"
+      aria-valuemax="100"
+    >
+      0%
+    </div>
+  </div>
+
+  <div class="text-center">
+    <a
+      href="{% url 'sentence-hunt' %}"
+      id="continue-btn"
+      class="btn btn-success text-center w-25 mt-4 d-none"
+    >
+      Continue
+    </a>
+  </div>
+</div>
+
+<script>
+  let selectedSentence = null;
+  let selectedDefinition = null;
+  let matchedPairs = {};
+  let pairColors = {};
+  let colorIndex = 0;
+
+  const correctPairs = JSON.parse(JSON.stringify({{ correct_pairs|safe }}));
+
+  const colors = ["#f9d6d2", "#c3e6cb", "#f1e8e6", "#d1ecf1", "#c8d6e5"];
+
+  function selectSentence(element) {
+    clearSelections("amharic-item");
+    element.classList.add("selected");
+    selectedSentence = element.getAttribute("data-sentence");
+    highlightPair();
+  }
+
+  function selectDefinition(element) {
+    clearSelections("english-item");
+    element.classList.add("selected");
+    selectedDefinition = element.getAttribute("data-definition");
+    highlightPair();
+  }
+
+  function highlightPair() {
+    if (selectedSentence && selectedDefinition) {
+      matchedPairs[selectedSentence] = selectedDefinition;
+
+      if (!pairColors[selectedSentence]) {
+        pairColors[selectedSentence] = colors[colorIndex % colors.length];
+        colorIndex++;
+      }
+
+      const sentenceElement = document.querySelector(`[data-sentence="${selectedSentence}"]`);
+      const defElement = document.querySelector(`[data-definition="${selectedDefinition}"]`);
+
+      sentenceElement.style.backgroundColor = pairColors[selectedSentence];
+      defElement.style.backgroundColor = pairColors[selectedSentence];
+
+      selectedSentence = null;
+      selectedDefinition = null;
+    }
+  }
+
+  function clearSelections(className) {
+    const elements = document.getElementsByClassName(className);
+    for (const element of elements) {
+      element.classList.remove("selected");
+    }
+  }
+
+  function submitAnswers() {
+    let correctCount = 0;
+
+    for (const sentence in matchedPairs) {
+      const definition = matchedPairs[sentence];
+      if (correctPairs[sentence] === definition) {
+        correctCount++;
+        highlightCorrect(sentence, definition);
+      } else {
+        highlightIncorrect(sentence, definition);
+      }
+    }
+
+    const percentage = (correctCount / Object.keys(correctPairs).length) * 100;
+    document.getElementById("progress-bar").style.width = `${percentage}%`;
+    document.getElementById("progress-bar").textContent = `${percentage.toFixed(0)}%`;
+
+    if (correctCount === Object.keys(correctPairs).length) {
+      document.getElementById("feedback").style.display = "block";
+      document.getElementById("feedback").textContent = "Great work! All pairs are correct!";
+      document.getElementById("submit-btn").disabled = true;
+      document.getElementById("continue-btn").classList.remove("d-none");
+      disableSelections();
+    } else {
+      document.getElementById("feedback").textContent = "Some answers are incorrect. Try again!";
+      document.getElementById("try-again-btn").classList.remove("d-none");
+    }
+  }
+
+  function highlightCorrect(sentence, definition) {
+    const sentenceElement = document.querySelector(`[data-sentence="${sentence}"]`);
+    const defElement = document.querySelector(`[data-definition="${definition}"]`);
+    sentenceElement.style.backgroundColor = "#d4edda"; // Green for correct
+    defElement.style.backgroundColor = "#d4edda";
+  }
+
+  function highlightIncorrect(sentence, definition) {
+    const sentenceElement = document.querySelector(`[data-sentence="${sentence}"]`);
+    const defElement = document.querySelector(`[data-definition="${definition}"]`);
+    sentenceElement.style.backgroundColor = "#f8d7da"; // Red for incorrect
+    defElement.style.backgroundColor = "#f8d7da";
+  }
+
+  function tryAgain() {
+    matchedPairs = {};
+    pairColors = {};
+    colorIndex = 0;
+    clearSelections("amharic-item");
+    clearSelections("english-item");
+
+    const sentenceItems = document.querySelectorAll(".amharic-item");
+    const defItems = document.querySelectorAll(".english-item");
+
+    sentenceItems.forEach((item) => (item.style.backgroundColor = ""));
+    defItems.forEach((item) => (item.style.backgroundColor = ""));
+
+    document.getElementById("feedback").textContent = "";
+    document.getElementById("try-again-btn").classList.add("d-none");
+    enableSelections();
+  }
+
+  function disableSelections() {
+    const sentenceItems = document.querySelectorAll(".amharic-item");
+    const defItems = document.querySelectorAll(".english-item");
+    sentenceItems.forEach(item => item.style.pointerEvents = 'none');
+    defItems.forEach(item => item.style.pointerEvents = 'none');
+  }
+
+  function enableSelections() {
+    const sentenceItems = document.querySelectorAll(".amharic-item");
+    const defItems = document.querySelectorAll(".english-item");
+    sentenceItems.forEach(item => item.style.pointerEvents = 'auto');
+    defItems.forEach(item => item.style.pointerEvents = 'auto');
+  }
+</script>
+
+<style>
+  .list-group-item.selected {
+    background-color: #cce5ff;
+    color: #004085;
+  }
+
+  .progress-bar {
+    transition: width 0.5s;
+  }
+</style>
+{% endblock %}

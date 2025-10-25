@@ -1,0 +1,164 @@
+{% extends "base.html" %} {% block content %}
+<div class="container">
+  <h2 class="text-center">Word Formation Game</h2>
+  <p class="text-center">
+    Base Word: <strong class="fs-5 fw-bold">{{ base_word }}</strong>
+  </p>
+
+  <!-- Prefix Input -->
+  <div class="mb-3">
+    <label for="prefix-input" class="form-label">Enter Prefix:</label>
+    <input
+      type="text"
+      class="form-control"
+      id="prefix-input"
+      placeholder="Type prefix here"
+    />
+  </div>
+
+  <!-- Prefix Choices -->
+  <div class="options mb-3">
+    <p>Available Prefixes:</p>
+    {% for prefix in prefixes %}
+    <div class="hint badge bg-light text-dark fs-5">{{ prefix }}</div>
+    {% endfor %}
+  </div>
+
+  <!-- Suffix Input -->
+  <div class="mb-3">
+    <label for="suffix-input" class="form-label">Enter Suffix:</label>
+    <input
+      type="text"
+      class="form-control"
+      id="suffix-input"
+      placeholder="Type suffix here"
+    />
+  </div>
+
+  <!-- Suffix Choices -->
+  <div class="options mb-3">
+    <p>Available Suffixes:</p>
+    {% for suffix in suffixes %}
+    <div class="hint badge bg-light text-dark fs-5">{{ suffix }}</div>
+    {% endfor %}
+  </div>
+
+  <div id="result" class="text-center">
+    Formed Word: <span id="formed-word" class="fs-2 fw-bold"></span>
+  </div>
+
+  <!-- Centered Button -->
+  <div class="text-center mb-3">
+    <button class="btn btn-primary" onclick="checkWord()">Submit</button>
+  </div>
+
+  <!-- Centered Feedback -->
+  <p id="feedback" class="text-center"></p>
+
+  <!-- Continue Button -->
+  <div
+    class="text-center mb-3"
+    id="continue-button-container"
+    style="display: none"
+  >
+    <a
+      href="{% url 'scrambled-letters' %}"
+      style="background: linear-gradient(to bottom, #ffefd5, #ffe4b5)"
+      class="btn"
+      onclick="continueGame()"
+      >Continue</a
+    >
+  </div>
+</div>
+
+<script>
+  document
+    .getElementById("prefix-input")
+    .addEventListener("input", updateFormedWord);
+  document
+    .getElementById("suffix-input")
+    .addEventListener("input", updateFormedWord);
+
+  function updateFormedWord() {
+    const baseWord = "{{ base_word }}";
+    const prefix = document.getElementById("prefix-input").value;
+    const suffix = document.getElementById("suffix-input").value;
+    document.getElementById("formed-word").textContent =
+      prefix + baseWord + suffix;
+  }
+
+  function checkWord() {
+    const correctPrefix = "{{ correct_prefix }}";
+    const correctSuffix = "{{ correct_suffix }}";
+    const prefix = document.getElementById("prefix-input").value.trim(); // Trim whitespace
+    const suffix = document.getElementById("suffix-input").value.trim();
+    const formedWord = prefix + "{{ base_word }}" + suffix;
+    const feedback = document.getElementById("feedback");
+
+    // Reset input highlighting
+    resetInputHighlight();
+
+    let isCorrect = true;
+
+    if (prefix !== correctPrefix) {
+      document.getElementById("prefix-input").classList.add("input-error");
+      isCorrect = false;
+    } else {
+      document.getElementById("prefix-input").classList.add("input-correct");
+    }
+
+    if (suffix !== correctSuffix) {
+      document.getElementById("suffix-input").classList.add("input-error");
+      isCorrect = false;
+    } else {
+      document.getElementById("suffix-input").classList.add("input-correct");
+    }
+
+    if (isCorrect) {
+      feedback.textContent = `Correct! 🎉 The word is ${formedWord} - {{ meaning }}.`;
+      feedback.style.color = "green";
+
+      // Disable input fields after correct answer
+      document.getElementById("prefix-input").disabled = true;
+      document.getElementById("suffix-input").disabled = true;
+      document.querySelector(".btn").disabled = true; // Disable the submit button
+
+      // Show the continue button
+      document.getElementById("continue-button-container").style.display =
+        "block";
+    } else {
+      feedback.textContent = "Incorrect! Try again.";
+      feedback.style.color = "red";
+    }
+  }
+
+  function resetInputHighlight() {
+    document
+      .getElementById("prefix-input")
+      .classList.remove("input-error", "input-correct");
+    document
+      .getElementById("suffix-input")
+      .classList.remove("input-error", "input-correct");
+  }
+</script>
+
+<style>
+  .options {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px 0;
+  }
+  .hint {
+    padding: 10px 20px;
+  }
+  .input-error {
+    border-color: red; /* Highlight with red border for errors */
+    background-color: #ffe6e6; /* Light red background */
+  }
+  .input-correct {
+    border-color: green; /* Highlight with green border for correct answers */
+    background-color: #e6ffe6; /* Light green background */
+  }
+</style>
+{% endblock content %}

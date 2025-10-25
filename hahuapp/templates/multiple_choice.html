@@ -1,0 +1,197 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container mt-5">
+  <h1 class="text-center text-primary">🌟 Multiple Choice 🌟</h1>
+  <div id="quiz-container" class="d-flex justify-content-center">
+    <div
+      class="card p-4 shadow-lg"
+      style="max-width: 500px; background-color: #f0f8ff"
+    >
+      <div class="card-body">
+        <h4
+          id="question-text"
+          class="text-center"
+          style="font-size: 1.5rem"
+        ></h4>
+        <div id="choices-container" class="mt-3 text-center row row-cols-2"></div>
+        <div id="feedback" class="mt-3"></div>
+        <div class="d-flex justify-content-between mt-3">
+          <button id="next-btn" class="btn btn-primary mt-3" disabled>
+            Next →
+          </button>
+          <div
+            id="score"
+            class="text-info font-weight-bold"
+            style="font-size: 1.2rem"
+          >
+            Score: 0
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<form id="award-points-form" method="POST" style="display: none">
+  {% csrf_token %}
+</form>
+
+<script>
+  const questions = {{ questions|safe }};
+  let currentQuestionIndex = 0;
+  let score = 0;
+  let no_incorrect = 0;
+
+    function getCSRFTokenFromForm() {
+        const form = document.getElementById('award-points-form');
+        const csrfToken = form.querySelector('[name="csrfmiddlewaretoken"]').value;
+        return csrfToken;
+    }
+
+    function awardPoints(points, reason) {
+        const csrfToken = getCSRFTokenFromForm(); // Get CSRF token from hidden form
+
+        if (csrfToken) {
+        fetch("{% url 'award-points' %}", {
+            method: "POST",
+            headers: {
+            "X-CSRFToken": csrfToken, // Include the CSRF token in the request headers
+            "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+            points: points,
+            reason: reason
+            }),
+        })
+            .then((response) => response.json())
+            .then((data) => {
+            if (data.message) {
+                console.log(data.message); // Optional feedback for debugging
+            }
+            })
+            .catch((error) => {
+            console.error("Error awarding points:", error);
+            });
+        } else {
+        console.error("CSRF token not found in the form");
+        }
+    }
+
+  const loadQuestion = () => {
+    const question = questions[currentQuestionIndex];
+    const questionText = document.getElementById("question-text");
+    const choicesContainer = document.getElementById("choices-container");
+    const feedbackContainer = document.getElementById("feedback");
+    choicesContainer.innerHTML = "";
+    feedbackContainer.innerHTML = "";
+
+    // Displaying the question
+    if (question.type === "photo_to_word") {
+      questionText.innerHTML = `<img src="${question.question}" class="img-fluid rounded" style="max-height: 300px;"/>`;
+    } else if (question.type === "word_to_photo") {
+      questionText.innerHTML = `<span style="font-size: 1.5rem; font-weight: bold;">${question.question}</span>`;
+    } else if (question.type === "video_to_word") {
+      questionText.innerHTML = `<video controls style="max-width: 100%;"><source src="${question.question}" type="video/mp4">Your browser does not support the video tag.</video>`;
+    } else if (question.type === "letter_sound_charades" || question.type === "word_sound_identification") {
+      questionText.innerHTML = `<audio controls style="width: 100%;"><source src="${question.question}" type="audio/mpeg">Your browser does not support the audio element.</audio>`;
+    } else {
+      questionText.innerHTML = `<span style="font-size: 1.5rem; font-weight: bold;">${question.question}</span>`;
+    }
+
+    // Displaying choices
+    question.choices.forEach((choice, idx) => {
+      const colDiv = document.createElement("div");
+      colDiv.classList.add("col", "mb-3");
+
+      const button = document.createElement("button");
+      button.classList.add("btn", "btn-outline-primary", "d-block", "mt-2", "btn-lg", "w-100");
+
+      if (choice.includes(".mp3") || choice.includes(".wav")) {
+        button.innerHTML = `
+          <audio controls class="audio-choice" data-audio-url="${choice}" style="width: 100%;"><source src="${choice}" type="audio/mpeg">Your browser does not support the audio element.</audio>
+        `;
+      } else if (choice.includes(".mp4") || choice.includes(".webm")) {
+        button.innerHTML = `<video controls style="width: 100%;"><source src="${choice}" type="video/mp4">Your browser does not support the video tag.</video>`;
+      } else if (choice.includes("<img") || choice.includes(".jpg") || choice.includes(".png") || choice.includes(".gif")) {
+        button.innerHTML = `<img src="${choice}" class="img-fluid" style="max-height: 150px; border-radius: 10px;"/>`;
+        button.setAttribute("data-choice-url", choice); // Store the URL in a data attribute
+      } else {
+        button.innerText = choice;
+      }
+
+      button.classList.add("btn", "btn-outline-primary", "d-block", "mt-2", "btn-lg");
+
+      button.onclick = () => {
+        // Disable all choices after one is clicked
+        const allButtons = choicesContainer.querySelectorAll("button");
+        allButtons.forEach(btn => btn.disabled = true);
+
+        if (button.innerHTML.includes("<audio")) {
+          const selectedAudioUrl = button.querySelector("audio").getAttribute("data-audio-url");
+          checkAnswer(selectedAudioUrl, question.correct_answer);
+        } else if (button.innerHTML.includes("<img")) {
+          const selectedImageUrl = button.getAttribute("data-choice-url"); // Get the image URL from the data attribute
+          checkAnswer(selectedImageUrl, question.correct_answer);
+        } else {
+          checkAnswer(button.innerText, question.correct_answer);
+        }
+      };
+
+      colDiv.appendChild(button);
+      choicesContainer.appendChild(colDiv);
+    });
+
+    document.getElementById("next-btn").disabled = true;
+  };
+
+  const checkAnswer = (selected, correct) => {
+    const feedbackContainer = document.getElementById("feedback");
+
+    if (selected === correct) {
+      score++;
+      feedbackContainer.innerHTML = `
+        <div class="alert alert-success" role="alert">
+          🎉 Correct! Well done! 🌟
+        </div>
+      `;
+      feedbackContainer.style.color = 'green';
+    } else {
+      feedbackContainer.innerHTML = `
+        <div class="alert alert-danger" role="alert">
+          Oops! That's wrong. 😞 The correct answer is: ${correct}.
+        </div>
+      `;
+      feedbackContainer.style.color = 'red';
+
+      no_incorrect += 1;
+      if (no_incorrect > 3){
+        awardPoints(-5, "Multiple Choice Game Incorrect Answer");
+      }
+    }
+
+    document.getElementById("score").innerText = `Score: ${score}`;
+    document.getElementById("next-btn").disabled = false;
+  };
+
+  document.getElementById("next-btn").addEventListener("click", () => {
+    currentQuestionIndex++;
+    if (currentQuestionIndex < questions.length) {
+      loadQuestion();
+    } else {
+        if (score > 8) {
+            awardPoints(25, "Good performance in the quiz! 🎉");
+        }
+
+      document.getElementById("quiz-container").innerHTML = `
+        <div class="text-center">
+          <h2>🎉 Game Over! 🎉</h2>
+          <p>Your final score is <strong>${score}/${questions.length}</strong></p>
+          <button class="btn btn-primary" onclick="location.reload();">Play Again</button>
+        </div>
+      `;
+    }
+  });
+
+  loadQuestion();
+</script>
+
+{% endblock %}

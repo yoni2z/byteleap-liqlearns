@@ -1,0 +1,126 @@
+{% extends "base.html" %} {% block content %}
+
+<div class="container mt-4">
+  <h1
+    class="text-center mb-5"
+    style="font-family: 'Comic Sans MS', sans-serif; color: #ff6b6b"
+  >
+    🌟 Fun Educational Games by Level! 🌟
+  </h1>
+
+  <div class="accordion" id="levelsAccordion">
+    {% for level, categories in levels.items %}
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="heading-{{ level|slugify }}">
+        <button
+          class="accordion-button {{ forloop.first|yesno:'' }}"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#collapse-{{ level|slugify }}"
+          aria-expanded="{{ forloop.first|yesno:'true,false' }}"
+          aria-controls="collapse-{{ level|slugify }}"
+        >
+          {{ level }} Level
+        </button>
+      </h2>
+      <div
+        id="collapse-{{ level|slugify }}"
+        class="accordion-collapse collapse {{ forloop.first|yesno:'show,' }}"
+        aria-labelledby="heading-{{ level|slugify }}"
+        data-bs-parent="#levelsAccordion"
+      >
+        <div class="accordion-body">
+          <div class="accordion" id="categoriesAccordion-{{ level|slugify }}">
+            {% for category, games in categories.items %} {% if games %}
+            <div class="accordion-item">
+              <h2
+                class="accordion-header"
+                id="heading-{{ level|slugify }}-{{ category|slugify }}"
+              >
+                <button
+                  class="accordion-button"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#collapse-{{ level|slugify }}-{{ category|slugify }}"
+                  aria-expanded="false"
+                  aria-controls="collapse-{{ level|slugify }}-{{ category|slugify }}"
+                >
+                  {{ category }} Games
+                </button>
+              </h2>
+              <div
+                id="collapse-{{ level|slugify }}-{{ category|slugify }}"
+                class="accordion-collapse collapse"
+                aria-labelledby="heading-{{ level|slugify }}-{{ category|slugify }}"
+                data-bs-parent="#categoriesAccordion-{{ level|slugify }}"
+              >
+                <div class="accordion-body">
+                  <ul class="list-group">
+                    {% for game in games %}
+                    <li
+                      class="list-group-item d-flex justify-content-between align-items-center"
+                    >
+                      <div>
+                        <strong>{{ game.title }}</strong>
+                        <p class="mb-0">{{ game.description }}</p>
+                      </div>
+                      <a
+                        href="{% url game.url %}"
+                        class="btn btn-primary btn-sm"
+                        >🎲 Play</a
+                      >
+                    </li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              </div>
+            </div>
+            {% endif %} {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<style>
+  .accordion-button {
+    font-family: "Comic Sans MS", "Chalkboard SE", sans-serif;
+    font-size: 1.2rem;
+    background-color: #ffb347;
+    color: #fff;
+    border: none;
+    transition: background-color 0.3s;
+  }
+
+  .accordion-button:hover {
+    background-color: #e68600;
+  }
+
+  .accordion-button:focus {
+    box-shadow: none;
+  }
+
+  .accordion-body {
+    font-family: "Comic Sans MS", "Chalkboard SE", sans-serif;
+    background-color: #f9f9f9;
+  }
+
+  .list-group-item {
+    border: none;
+    font-family: "Comic Sans MS", "Chalkboard SE", sans-serif;
+  }
+
+  .btn-primary {
+    font-family: "Comic Sans MS", "Chalkboard SE", sans-serif;
+    background-color: #6a1b9a;
+    border: none;
+  }
+
+  .btn-primary:hover {
+    background-color: #4a0d6f;
+  }
+</style>
+
+{% endblock %}

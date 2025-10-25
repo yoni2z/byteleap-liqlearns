@@ -1,0 +1,108 @@
+{% extends "base.html" %} {% block content %}
+<div class="container mt-5">
+  <h2 class="text-center">Complete the Word</h2>
+
+  <p class="text-center display-4" id="display-word">{{ display_word }}</p>
+
+  <div class="text-center mt-4">
+    <label for="user-input" class="form-label h5"
+      >Enter the missing letter:</label
+    >
+    <input
+      type="text"
+      id="user-input"
+      maxlength="1"
+      class="form-control text-center"
+      style="width: 60px; display: inline-block"
+    />
+    <button
+      id="submit-btn"
+      class="btn ms-3"
+      style="background: linear-gradient(to bottom, #ffefd5, #ffe4b5)"
+    >
+      Submit
+    </button>
+  </div>
+
+  <div class="text-center mt-4">
+    <h5>Choices:</h5>
+    <div id="choices" class="d-flex justify-content-center">
+      {% for choice in choices %}
+      <div class="choice-card m-2 p-2 border rounded" style="width: 50px">
+        <strong>{{ choice }}</strong>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="text-center mt-5">
+    <p id="feedback" class="fs-3 fw-bold"></p>
+    <p id="word-meaning" class="fs-5" style="display: none">
+      Meaning of the word: <strong>{{ meaning }}</strong>
+    </p>
+    <a
+      href="{% url 'word-formation' %}"
+      id="continue-btn"
+      class="btn my-3"
+      style="background: linear-gradient(to bottom, #ffefd5, #ffe4b5); display: none"
+    >
+      Continue
+    </a>
+  </div>
+</div>
+
+<script>
+  const submitButton = document.getElementById("submit-btn");
+  const userInput = document.getElementById("user-input");
+  const feedback = document.getElementById("feedback");
+  const displayWord = document.getElementById("display-word");
+  const correctLetter = "{{ correct_letter }}";
+  const correctWord = "{{ correct_word }}";
+
+  submitButton.addEventListener("click", function () {
+    const enteredLetter = userInput.value.trim();
+
+    if (enteredLetter === correctLetter) {
+      // Update the displayed word with the correct letter
+      displayWord.textContent = correctWord;
+      feedback.textContent = "Correct!";
+      feedback.classList.remove("text-danger");
+      feedback.classList.add("text-success");
+      userInput.classList.add("input-correct");
+
+      // Display word meaning and continue button
+      document.getElementById("word-meaning").style.display = "block";
+      document.getElementById("continue-btn").style.display = "inline-block";
+
+      // Disable input and submit button
+      userInput.disabled = true;
+      submitButton.disabled = true;
+    } else {
+      feedback.textContent = "Try Again!";
+      feedback.classList.remove("text-success");
+      feedback.classList.add("text-danger");
+      userInput.classList.add("input-error");
+    }
+  });
+
+  function resetInputHighlight() {
+    document
+      .getElementById("prefix-input")
+      .classList.remove("input-error", "input-correct");
+    document
+      .getElementById("suffix-input")
+      .classList.remove("input-error", "input-correct");
+  }
+</script>
+
+<style>
+  .input-error {
+    border-color: red; /* Highlight with red border for errors */
+    background-color: #ffe6e6; /* Light red background */
+  }
+  .input-correct {
+    border-color: green; /* Highlight with green border for correct answers */
+    background-color: #e6ffe6; /* Light green background */
+  }
+</style>
+{% endblock %}

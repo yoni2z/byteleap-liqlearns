@@ -1,0 +1,162 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container mt-5">
+  <h1 class="text-center mb-4">Match & Write Activity</h1>
+
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <h3 class="text-center mb-3">Match the Letter with the Image</h3>
+
+      {% if letter_image %}
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <img
+              src="{{ letter_image.image.url }}"
+              alt="{{ letter_image.letter }}"
+              class="img-thumbnail me-3"
+              style="width: 100px; height: auto"
+            />
+            <form method="POST" class="d-flex flex-column flex-fill">
+              {% csrf_token %}
+              <input
+                type="text"
+                name="answer"
+                class="form-control mb-2"
+                placeholder="Write the letter here"
+                required
+              />
+              <button
+                type="submit"
+                class="btn"
+                style="background: linear-gradient(to bottom, #ffefd5, #ffe4b5)"
+              >
+                Submit
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="alert alert-success text-center">{{ feedback }}</div>
+      {% endif %} {% if feedback %}
+      <div class="alert alert-info text-center mt-4">{{ feedback }}</div>
+      {% endif %} {% if completed %}
+      <div class="text-center mt-4">
+        <h4>Activity Completed!</h4>
+        <form method="POST" action="{% url 'reset-activity' %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-success">
+            Restart Activity
+          </button>
+        </form>
+      </div>
+      {% endif %}
+
+      <h3 class="text-center mt-4">Tracing Board</h3>
+      <div class="d-flex justify-content-center mb-3">
+        <canvas
+          id="tracingBoard"
+          class="border"
+          style="
+            width: 100%;
+            max-width: 400px;
+            height: 200px;
+            border: 2px solid ffe4b5;
+          "
+        ></canvas>
+      </div>
+      <div class="text-center">
+        <button id="clearBoard" class="btn btn-secondary">Clear Board</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const canvas = document.getElementById("tracingBoard");
+  const ctx = canvas.getContext("2d");
+  let drawing = false;
+
+  // Function to draw the letter as a faded background
+  function drawBackgroundLetter(letter) {
+    ctx.font = "100px Arial"; // Set the font size and type
+    ctx.fillStyle = "rgba(0, 0, 0, 0.1)"; // Set a faded color
+    ctx.textAlign = "center"; // Center the text
+    ctx.textBaseline = "middle"; // Center vertically
+    ctx.fillText(letter, canvas.width / 2, canvas.height / 2); // Draw the letter in the center
+  }
+
+  // Call the function with the letter you want to display
+  drawBackgroundLetter("{{ letter_image.letter }}"); // Assuming the letter is stored in letter_image.letter
+
+  // Function to get the mouse/touch coordinates relative to the canvas
+  function getMousePos(event) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width; // Scale factor for width
+    const scaleY = canvas.height / rect.height; // Scale factor for height
+    const x = (event.clientX - rect.left) * scaleX;
+    const y = (event.clientY - rect.top) * scaleY;
+    return { x, y };
+  }
+
+  // Start drawing (mouse event)
+  canvas.addEventListener("mousedown", (event) => {
+    drawing = true;
+    const { x, y } = getMousePos(event);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  });
+
+  // Stop drawing (mouse event)
+  canvas.addEventListener("mouseup", () => {
+    drawing = false;
+    ctx.closePath();
+  });
+
+  // Draw on canvas (mouse event)
+  canvas.addEventListener("mousemove", (event) => {
+    if (!drawing) return;
+
+    const { x, y } = getMousePos(event);
+    ctx.lineTo(x, y);
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  });
+
+  // Start drawing (touch event)
+  canvas.addEventListener("touchstart", (event) => {
+    event.preventDefault(); // Prevent scrolling
+    drawing = true;
+    const { x, y } = getMousePos(event.touches[0]);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  });
+
+  // Draw on canvas (touch event)
+  canvas.addEventListener("touchmove", (event) => {
+    event.preventDefault(); // Prevent scrolling
+    if (!drawing) return;
+
+    const { x, y } = getMousePos(event.touches[0]);
+    ctx.lineTo(x, y);
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  });
+
+  // Stop drawing (touch event)
+  canvas.addEventListener("touchend", (event) => {
+    event.preventDefault(); // Prevent scrolling
+    drawing = false;
+    ctx.closePath();
+  });
+
+  // Clear the canvas
+  document.getElementById("clearBoard").addEventListener("click", () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawBackgroundLetter("{{ letter_image.letter }}"); // Redraw the background letter
+  });
+</script>
+
+{% endblock %}

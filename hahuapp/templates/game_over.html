@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5 text-center">
+    <h1>Game Over!</h1>
+    <h3>Your Score: {{ score }}</h3>
+    <a href="{% url 'letter_memory_game' %}" class="btn btn-primary">Play Again</a>
+</div>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Word Audio Activity</h1>
+    <h3 class="text-center mb-3">{{ word_audio.word }}</h3>
+    
+    {% if word_audio.image %}
+    <div class="text-center">
+        <img src="{{ word_audio.image.url }}" alt="Word Image" class="img-fluid" style="max-height: 200px;">
+    </div>
+    {% endif %}
+    
+    {% if word_audio.definition %}
+    <p class="text-center mt-3">{{ word_audio.definition }}</p>
+    {% endif %}
+    
+    <div class="text-center mt-4">
+        <audio id="wordSound" src="{{ word_audio.audio_file.url }}" preload="auto"></audio>
+        <button class="btn btn-primary btn-lg" onclick="document.getElementById('wordSound').play();">Play Sound</button>
+    </div>
+
+    <div class="text-center mt-5">
+        <h5>Record Your Voice:</h5>
+        <button id="startRecording" class="btn btn-success btn-lg">Start Recording</button>
+        <button id="stopRecording" class="btn btn-danger btn-lg" disabled>Stop Recording</button>
+    </div>
+
+    <div class="text-center mt-4">
+        <h5>Your Recording:</h5>
+        <audio id="userRecording" controls class="mt-2"></audio>
+    </div>
+
+    <form id="uploadForm" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="audio_data" id="audioData">
+        <input type="hidden" name="word_audio_id" value="{{ word_audio.id }}">
+        <button type="submit" class="btn btn-primary mt-4">Upload Recording</button>
+    </form>
+
+    <script>
+        let mediaRecorder;
+        let recordedChunks = [];
+
+        // Start recording
+        document.getElementById('startRecording').onclick = async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+
+                recordedChunks = []; // Clear previous recordings
+
+                mediaRecorder.ondataavailable = event => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(recordedChunks, { type: 'audio/wav' });
+                    const url = URL.createObjectURL(blob);
+                    document.getElementById('userRecording').src = url;
+
+                    // Convert Blob to Base64
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        document.getElementById('audioData').value = reader.result.split(",")[1]; // Exclude Base64 prefix
+                    };
+                    reader.readAsDataURL(blob);
+
+                    recordedChunks = [];
+                };
+
+                mediaRecorder.start();
+                document.getElementById('startRecording').disabled = true;
+                document.getElementById('stopRecording').disabled = false;
+            } catch (err) {
+                console.error("Error accessing microphone:", err);
+                alert("Microphone access is required to record audio.");
+            }
+        };
+
+        // Stop recording
+        document.getElementById('stopRecording').onclick = () => {
+            if (mediaRecorder) {
+                mediaRecorder.stop();
+                document.getElementById('startRecording').disabled = false;
+                document.getElementById('stopRecording').disabled = true;
+            }
+        };
+    </script>
+</div>
+{% endblock %}

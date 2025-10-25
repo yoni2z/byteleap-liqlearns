@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Paragraph Reading Activity</h1>
+    
+    <h3 class="text-center mb-3">{{ paragraph.content }}</h3>
+
+    {% if paragraph.definition %}
+    <p class="text-center mt-3">{{ paragraph.definition }}</p>
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <h5>Record your reading and upload the file:</h5>
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- File Input for Recording -->
+            <input type="file" name="audio_file" accept="audio/*" required>
+            
+            <button type="submit" class="btn btn-primary btn-lg mt-3">Upload Recording</button>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,204 @@
+{% extends "base.html" %} {% block content %}
+<div class="container text-center">
+  <h2>Listen and Select Family Members of "{{ letter }}"</h2>
+
+  <!-- Draggable audio options -->
+  <div id="audio-options" class="d-flex flex-wrap justify-content-center mb-4">
+    {% for audio in audio_choices %}
+    <div class="draggable-audio" draggable="true" data-audio="{{ audio }}">
+      <audio controls src="{{ audio }}" preload="none"></audio>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Dropzone for selecting correct family members -->
+  <h5>Drag the correct family audios into the box below:</h5>
+  <div id="dropzone" class="dropzone"></div>
+
+  <!-- Submit button to check answer -->
+  <button id="submit-btn" class="btn btn-success my-3">Check Answer</button>
+
+  <!-- Continue button (hidden by default) -->
+  <a
+    href="{% url 'find-family-2' %}"
+    id="continue-btn"
+    class="btn btn-primary my-3"
+    style="display: none"
+    >Continue</a
+  >
+
+  <!-- Feedback message -->
+  <div id="feedback" class="mt-3"></div>
+</div>
+
+<form id="award-points-form" method="POST" style="display: none">
+  {% csrf_token %}
+</form>
+
+<script>
+  const correctAudioFiles = {{ correct_audio_files|safe }};
+  let draggedAudio = null;
+  const submitBtn = document.getElementById("submit-btn");
+
+  let no_incorrect = 0;
+
+  document.querySelectorAll('.draggable-audio').forEach(audioElement => {
+    audioElement.addEventListener('dragstart', () => {
+      draggedAudio = audioElement;
+      setTimeout(() => audioElement.classList.add('hidden'), 0);
+    });
+
+    audioElement.addEventListener('dragend', () => {
+      setTimeout(() => audioElement.classList.remove('hidden'), 0);
+      draggedAudio = null;
+    });
+  });
+
+  const dropzone = document.getElementById('dropzone');
+  const optionsContainer = document.getElementById('audio-options');
+
+  // Handle dropping into dropzone
+  dropzone.addEventListener('dragover', e => e.preventDefault());
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    if (draggedAudio) {
+      dropzone.appendChild(draggedAudio);
+    }
+  });
+
+  // Enhanced answer checking with detailed feedback
+  document.getElementById('submit-btn').addEventListener('click', () => {
+    const selectedAudios = Array.from(dropzone.children).map(item => item.getAttribute('data-audio'));
+
+    const allCorrectSelected = selectedAudios.every(audio => correctAudioFiles.includes(audio));
+    const overSelected = selectedAudios.some(audio => !correctAudioFiles.includes(audio));
+    const allCorrectIncluded = correctAudioFiles.every(audio => selectedAudios.includes(audio));
+
+    const feedback = document.getElementById('feedback');
+
+    // Determine feedback based on conditions
+    if (allCorrectIncluded && !overSelected) {
+      feedback.textContent = 'Correct! You identified all family members.';
+      feedback.className = 'alert alert-success';
+      disableDragAndDrop();
+      document.getElementById('continue-btn').style.display = 'inline-block';
+      submitBtn.style.display = 'none';
+
+      // award points for the win
+      awardPoints(25, "Find Family Game Win");
+    } else if (allCorrectSelected && !allCorrectIncluded) {
+      feedback.textContent = 'Correct so far, but add the remaining family members.';
+      feedback.className = 'alert alert-warning';
+      setTimeout(() => feedback.textContent = '', 2000);
+      setTimeout(() => feedback.className = '', 2000);
+    } else if (overSelected) {
+      feedback.textContent = 'Some incorrect audios are included. Remove them and try again.';
+      feedback.className = 'alert alert-danger';
+      setTimeout(() => feedback.textContent = '', 2000);
+      setTimeout(() => feedback.className = '', 2000);
+
+      no_incorrect += 1;
+      if (no_incorrect > 2){
+        awardPoints(-5, "Find Family Game Incorrect Answer");
+      }
+    } else {
+      feedback.textContent = 'Incorrect selection. Try identifying only family members of the letter.';
+      feedback.className = 'alert alert-danger';
+      setTimeout(() => feedback.textContent = '', 2000);
+      setTimeout(() => feedback.className = '', 2000);
+
+      no_incorrect += 1;
+      if (no_incorrect > 2){
+        awardPoints(-5, "Find Family Game Incorrect Answer");
+      }
+    }
+  });
+
+  // Disable drag-and-drop on correct answer
+  function disableDragAndDrop() {
+    document.querySelectorAll('.draggable-audio').forEach(item => item.draggable = false);
+    dropzone.classList.add('disabled-dropzone');
+  }
+
+  // Add click-to-remove functionality for items in dropzone
+  dropzone.addEventListener('click', e => {
+    if (e.target.closest('.draggable-audio')) {
+      const audioItem = e.target.closest('.draggable-audio');
+      optionsContainer.appendChild(audioItem); // Move back to options container
+    }
+  });
+
+  function getCSRFTokenFromForm() {
+    const form = document.getElementById('award-points-form');
+    const csrfToken = form.querySelector('[name="csrfmiddlewaretoken"]').value;
+    return csrfToken;
+  }
+
+  function awardPoints(points, reason) {
+    const csrfToken = getCSRFTokenFromForm(); // Get CSRF token from hidden form
+
+    if (csrfToken) {
+      fetch("{% url 'award-points' %}", {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": csrfToken, // Include the CSRF token in the request headers
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          points: points,
+          reason: reason
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.message) {
+            console.log(data.message); // Optional feedback for debugging
+          }
+        })
+        .catch((error) => {
+          console.error("Error awarding points:", error);
+        });
+    } else {
+      console.error("CSRF token not found in the form");
+    }
+  }
+</script>
+
+<style>
+  .draggable-audio {
+    padding: 10px;
+    margin: 5px;
+    cursor: move;
+    border-radius: 5px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+  }
+
+  .dropzone {
+    min-height: 100px;
+    padding: 10px;
+    background-color: #e9ecef;
+    border: 2px dashed #6c757d;
+    border-radius: 5px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+  }
+
+  .disabled-dropzone {
+    opacity: 0.6;
+  }
+
+  .alert {
+    font-size: 1.2em;
+  }
+
+  .hidden {
+    display: none;
+  }
+</style>
+{% endblock %}

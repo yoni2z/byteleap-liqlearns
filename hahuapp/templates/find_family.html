@@ -1,0 +1,184 @@
+{% extends "base.html" %} {% block content %}
+
+<div class="container text-center">
+  <h2 class="mb-4">Find the Family Members of "{{ letter }}"</h2>
+
+  <!-- Options: Draggable letters -->
+  <div id="options" class="d-flex flex-wrap justify-content-center mb-4">
+    {% for option in options %}
+    <div class="draggable-letter" draggable="true" data-letter="{{ option }}">
+      {{ option }}
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Dropzone: Where students drop family members -->
+  <h5>Drag the correct family members into the box below:</h5>
+  <div
+    id="dropzone"
+    class="dropzone d-flex justify-content-center align-items-center"
+  ></div>
+
+  <!-- Submit button to check answer -->
+  <button id="submit-btn" class="btn btn-success my-3">Check Answer</button>
+
+  <!-- Continue button to proceed to next question (hidden initially) -->
+  <a
+    href="{% url 'find-family' %}"
+    id="continue-btn"
+    class="btn btn-primary my-3 d-none"
+    >Continue</a
+  >
+
+  <!-- Feedback message -->
+  <div id="feedback" class="mt-3"></div>
+</div>
+
+<script>
+  const correctFamily = {{ correct_family|safe }};
+  const letter = "{{ letter }}";
+
+  let draggedItem = null;
+
+  // Enable drag-and-drop functionality for options
+  const draggableLetters = document.querySelectorAll('.draggable-letter');
+  const dropzone = document.getElementById('dropzone');
+  const feedback = document.getElementById('feedback');
+  const submitBtn = document.getElementById('submit-btn');
+  const continueBtn = document.getElementById('continue-btn');
+
+  draggableLetters.forEach(letter => {
+      letter.addEventListener('dragstart', () => {
+          draggedItem = letter;
+          setTimeout(() => letter.classList.add('hidden'), 0);
+      });
+
+      letter.addEventListener('dragend', () => {
+          setTimeout(() => letter.classList.remove('hidden'), 0);
+          draggedItem = null;
+      });
+  });
+
+  dropzone.addEventListener('dragover', e => {
+      e.preventDefault();
+  });
+
+  dropzone.addEventListener('drop', e => {
+      e.preventDefault();
+      if (draggedItem) {
+          dropzone.appendChild(draggedItem);
+          draggedItem.classList.remove('hidden');
+
+          // Add click event listener to remove the letter when clicked
+          draggedItem.addEventListener('click', removeLetter);
+      }
+  });
+
+  // Function to remove letter from dropzone when clicked
+  function removeLetter(event) {
+      const letterElement = event.target;
+      dropzone.removeChild(letterElement);
+      document.getElementById('options').appendChild(letterElement);
+      letterElement.classList.remove('correct-highlight', 'incorrect-highlight');
+  }
+
+  // Function to check the answer when the submit button is clicked
+  document.getElementById('submit-btn').addEventListener('click', () => {
+    // Get the letters in the dropzone
+    const selectedFamily = Array.from(dropzone.children);
+
+    // Check if the dropzone is empty
+    if (selectedFamily.length === 0) {
+        feedback.textContent = 'You need to select some family members before submitting.';
+        feedback.className = 'alert alert-warning';
+        return; // Exit the function early if the dropzone is empty
+    }
+
+    // Check each letter to see if it belongs to the correct family
+    selectedFamily.forEach(letter => {
+        if (correctFamily.includes(letter.dataset.letter.trim())) {
+            letter.classList.add('correct-highlight');
+        } else {
+            letter.classList.add('incorrect-highlight');
+        }
+    });
+
+    // Determine if the answer is fully correct
+    const isCorrect = (selectedFamily.length == 4) && (selectedFamily.every(letter => correctFamily.includes(letter.dataset.letter.trim())));
+
+    if (isCorrect) {
+        feedback.textContent = 'Correct! You identified the correct family members.';
+        feedback.className = 'alert alert-success';
+        continueBtn.classList.remove('d-none');
+        disableAllInteractions();
+    } else {
+        if(selectedFamily.length < 4){
+          feedback.textContent = 'Correct so far, Include the remaining.';
+          feedback.className = 'alert alert-warning';
+        } else {
+          feedback.textContent = 'Incorrect. Some selected letters do not belong to the family.';
+          feedback.className = 'alert alert-danger';
+        }
+
+
+        // Remove highlights after 1 second if the answer is incorrect
+        setTimeout(() => {
+            selectedFamily.forEach(letter => letter.classList.remove('correct-highlight', 'incorrect-highlight'));
+        }, 1000);
+    }
+  });
+
+
+  // Function to disable all drag-and-drop elements and submit button
+  function disableAllInteractions() {
+      submitBtn.disabled = true;
+      draggableLetters.forEach(letter => letter.setAttribute('draggable', 'false'));
+      dropzone.querySelectorAll('.draggable-letter').forEach(letter => {
+          letter.removeEventListener('click', removeLetter);
+      });
+  }
+</script>
+
+<style>
+  /* Styling for draggable items and dropzone */
+  .draggable-letter {
+    padding: 10px;
+    margin: 5px;
+    background-color: #f0f0f0;
+    cursor: move;
+    border-radius: 5px;
+  }
+
+  .dropzone {
+    min-height: 100px;
+    padding: 10px;
+    background-color: #e9ecef;
+    border: 2px dashed #6c757d;
+    border-radius: 5px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+  }
+
+  .alert {
+    font-size: 1.2em;
+  }
+
+  .hidden {
+    display: none;
+  }
+
+  /* Highlight styles for correct and incorrect selections */
+  .correct-highlight {
+    background-color: #c3e6cb;
+    border: 1px solid #155724;
+  }
+
+  .incorrect-highlight {
+    background-color: #f5c6cb;
+    border: 1px solid #721c24;
+  }
+</style>
+
+{% endblock %}

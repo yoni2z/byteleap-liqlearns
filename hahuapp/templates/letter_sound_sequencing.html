@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Letter Sound Sequencing</title>
+    
+</head>
+<body>
+    <h1>Arrange the Sounds in Order</h1>
+    <div id="lettersContainer">
+        {% for sound in sounds %}
+            <div class="draggable" draggable="true" data-letter="{{ sound.letter }}">
+                {{ sound.letter }}
+            </div>
+        {% endfor %}
+    </div>
+    <button onclick="checkOrder()">Check Order</button>
+
+    <script>
+        // JavaScript for drag-and-drop and order checking goes here
+        const draggables = document.querySelectorAll('.draggable');
+const container = document.getElementById('lettersContainer');
+
+draggables.forEach(draggable => {
+    draggable.addEventListener('dragstart', () => {
+        draggable.classList.add('dragging');
+    });
+
+    draggable.addEventListener('dragend', () => {
+        draggable.classList.remove('dragging');
+    });
+});
+
+container.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const afterElement = getDragAfterElement(container, e.clientY);
+    const dragging = document.querySelector('.dragging');
+    if (afterElement == null) {
+        container.appendChild(dragging);
+    } else {
+        container.insertBefore(dragging, afterElement);
+    }
+});
+
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.draggable:not(.dragging)')];
+
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+function checkOrder() {
+    const orderedLetters = Array.from(container.children).map(child => child.dataset.letter);
+    const correctOrder = {{ correct_order|safe }}; // Pass correct order from Django context
+
+    if (JSON.stringify(orderedLetters) === JSON.stringify(correctOrder)) {
+        alert('Correct order!');
+    } else {
+        alert('Try again!');
+    }
+}
+
+    </script>
+</body>
+</html>

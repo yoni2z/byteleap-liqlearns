@@ -1,0 +1,83 @@
+{% extends "base.html" %} {% block content %}
+<div class="container">
+  <h1 class="text-center mb-4 text-primary">🎉 Top 10 Stories 🎉</h1>
+  <div class="row">
+    {% for story in stories %}
+    <div class="col-md-4">
+      <div class="card story-card mb-4">
+        <div class="card-body">
+          <h5 class="card-title text-center text-info">{{ story.title }}</h5>
+          <p class="card-text text-muted">
+            {{ story.description|truncatewords:20 }}
+          </p>
+          <div class="text-center">
+            <a
+              href="{% url 'story-telling-part' story.id 1 %}"
+              class="btn btn-primary listen-btn"
+            >
+              🎧 Listen
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Custom CSS for Child-Friendly Design -->
+<style>
+  body {
+    background: linear-gradient(to right, #f3e5f5, #e1bee7);
+    font-family: "Comic Sans MS", "Chalkboard SE", sans-serif;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #7e57c2;
+  }
+
+  .story-card {
+    background-color: #ffebee;
+    border: 2px solid #ffcdd2;
+    border-radius: 15px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .story-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.3);
+  }
+
+  .card-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+
+  .card-text {
+    font-size: 1rem;
+    color: #616161;
+  }
+
+  .listen-btn {
+    font-size: 1.2rem;
+    padding: 10px 20px;
+    border-radius: 20px;
+    background-color: #ff8a80;
+    color: white;
+    transition: background-color 0.3s ease;
+  }
+
+  .listen-btn:hover {
+    background-color: #ff5252;
+  }
+
+  .card-body {
+    text-align: center;
+    padding: 20px;
+  }
+</style>
+{% endblock content %}

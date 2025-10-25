@@ -1,0 +1,217 @@
+{% extends "base.html" %} {% block content %}
+<h1 class="mt-5 text-center">Letter Sound Memory Game</h1>
+
+<div class="container my-4 text-center">
+  <div id="timer" class="mb-3">
+    Time Remaining: <span id="time-left">60</span> seconds
+  </div>
+
+  <div id="game-board" class="row d-flex justify-content-center align-items-center">
+    {% for card in card_data %}
+    <div
+      class="col-6 sound-card m-2"
+      data-sound="{{ card.sound_field.url }}"
+      data-letter="{{ card.letter }}"
+      onclick="flipCard(this)"
+    >
+      <div class="card-inner">
+        <div
+          class="card-front"
+          style="background: linear-gradient(to bottom, #ffefd5, #ffe4b5)"
+        >
+          🔊
+        </div>
+        <!-- Speaker Icon -->
+        <div class="card-back"></div>
+        <!-- Hidden letter initially -->
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div id="feedback" class="d-none">
+    <h3>🎉 Congratulations! You solved the game! 🎉</h3>
+    <a href="{% url 'letter-sound-charades' %}" class="btn btn-outline-success"
+      >Continue</a
+    >
+  </div>
+
+  <div id="game-over" class="d-none">
+    <h3>⏰ Time's Up! Game Over!</h3>
+    <button onclick="restartGame()">Try Again</button>
+  </div>
+</div>
+
+<script>
+      let firstCard = null;
+      let secondCard = null;
+      let isChecking = false;
+      let matchedPairs = 0;
+      const totalPairs = {{ card_data|length }} / 2;
+      let timerInterval;
+      let gameEnded = false;
+
+      function preloadAudio(url) {
+        const audio = new Audio(url);
+        audio.load();
+        return audio;
+      }
+
+      function startTimer(seconds) {
+        let timeLeft = seconds;
+        document.getElementById('time-left').textContent = timeLeft;
+
+        timerInterval = setInterval(() => {
+          timeLeft--;
+          document.getElementById('time-left').textContent = timeLeft;
+
+          if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            showGameOver();
+            disableAllCards();
+          }
+        }, 1000);
+      }
+
+      function flipCard(card) {
+        if (isChecking || card === firstCard || card.classList.contains('matched') || gameEnded) return;
+
+        const soundUrl = card.dataset.sound;
+        const audio = preloadAudio(soundUrl);
+        audio.play().catch((error) => console.error("Audio playback failed:", error));
+
+        card.classList.add("flipped");
+
+        if (!firstCard) {
+          firstCard = card;
+        } else {
+          secondCard = card;
+          isChecking = true;
+          setTimeout(checkMatch, 1000);
+        }
+      }
+
+      function checkMatch() {
+      const letter1 = firstCard?.dataset.letter; // Use optional chaining
+      const letter2 = secondCard?.dataset.letter;
+
+      if (letter1 === letter2) {
+          displayMatchedLetters(firstCard, secondCard);
+          firstCard.classList.add('matched');
+          secondCard.classList.add('matched');
+
+          matchedPairs++;
+          if (matchedPairs === totalPairs) {
+              clearInterval(timerInterval);
+              showFeedback();
+              gameEnded = true;
+          }
+      } else {
+          // Flip cards back after a short delay
+          setTimeout(() => {
+              if (firstCard && secondCard) { // Check if they are not null
+                  firstCard.classList.remove('flipped');
+                  secondCard.classList.remove('flipped');
+              }
+          }, 1000);
+      }
+
+      // Reset the firstCard and secondCard
+      firstCard = null;
+      secondCard = null;
+      isChecking = false;
+  }
+
+
+
+      function displayMatchedLetters(card1, card2) {
+        card1.querySelector('.card-back').textContent = card1.dataset.letter;
+        card2.querySelector('.card-back').textContent = card2.dataset.letter;
+      }
+
+      function disableAllCards() {
+        document.querySelectorAll('.sound-card').forEach(card => card.classList.add('disabled'));
+      }
+
+      function showFeedback() {
+        document.getElementById('feedback').classList.remove('d-none');
+      }
+
+      function showGameOver() {
+        document.getElementById('game-over').classList.remove('d-none');
+        gameEnded = true;
+      }
+
+      function restartGame() {
+        window.location.reload();
+      }
+
+      document.addEventListener('DOMContentLoaded', () => startTimer(60));
+</script>
+
+<style>
+  .sound-card {
+    width: 100px;
+    height: 100px;
+    perspective: 1000px;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .card-inner {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+  }
+
+  .flipped .card-inner {
+    transform: rotateY(180deg);
+  }
+
+  .card-front,
+  .card-back {
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+  }
+
+  .card-front {
+    background-color: #ddd;
+  }
+
+  .card-back {
+    background-color: #4caf50;
+    transform: rotateY(180deg);
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .matched {
+    pointer-events: none;
+  }
+
+  .disabled {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  #feedback,
+  #game-over {
+    margin-top: 20px;
+    text-align: center;
+  }
+
+  #timer {
+    font-weight: bold;
+    font-size: 1.5rem;
+  }
+</style>
+{% endblock %}

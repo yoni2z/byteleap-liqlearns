@@ -1,0 +1,127 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container mt-4">
+  <div class="row">
+    {% for letter in card_set %}
+    <div class="col-md-3 mb-3">
+      <div class="card memory-card" data-letter="{{ letter }}">
+        <div
+          class="card-front d-flex justify-content-center align-items-center"
+          style="background: linear-gradient(to bottom, #ffefd5, #ffe4b5)"
+        >
+          <span class="fs-2 fw-bold">?</span>
+        </div>
+        <div class="card-back d-flex justify-content-center align-items-center">
+          <span class="fs-2 fw-bold">{{ letter }}</span>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <div
+    class="alert alert-success text-center fs-3 fw-bold"
+    id="success-feedback"
+    style="
+      display: none;
+      background-color: #27ae60;
+      color: white;
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0px 4px 10px rgba(0, 128, 0, 0.5);
+    "
+  >
+    🎉 Great Work! 🎉
+  </div>
+
+  <a
+    href="{% url 'letter-sequencing' %}"
+    id="continue-btn"
+    class="btn btn-primary mt-3"
+    style="
+      display: none;
+      border-radius: 12px;
+      font-weight: bold;
+      padding: 12px 24px;
+      font-size: 1.2rem;
+      box-shadow: 0px 4px 10px rgba(0, 123, 255, 0.4);
+      transition: all 0.3s ease;
+    "
+  >
+    Continue
+  </a>
+</div>
+
+<script>
+  let hasFlippedCard = false;
+  let firstCard, secondCard;
+  let lockBoard = false;
+  let matchedCards = 0; // To track matched pairs
+
+  document.querySelectorAll(".memory-card").forEach((card) => {
+    card.addEventListener("click", flipCard);
+  });
+
+  function flipCard() {
+    if (lockBoard) return;
+    if (this === firstCard) return;
+
+    this.classList.add("flip");
+
+    if (!hasFlippedCard) {
+      hasFlippedCard = true;
+      firstCard = this;
+    } else {
+      hasFlippedCard = false;
+      secondCard = this;
+
+      checkForMatch();
+    }
+  }
+
+  function checkForMatch() {
+    if (firstCard.dataset.letter === secondCard.dataset.letter) {
+      disableCards();
+      matchedCards += 2; // Increment the matched cards count
+      if (matchedCards === document.querySelectorAll(".memory-card").length) {
+        showContinueButton(); // Show the continue button if all cards are matched
+      }
+    } else {
+      unflipCards();
+    }
+  }
+
+  function disableCards() {
+    firstCard.removeEventListener("click", flipCard);
+    secondCard.removeEventListener("click", flipCard);
+    resetBoard();
+  }
+
+  function unflipCards() {
+    lockBoard = false;
+    setTimeout(() => {
+      firstCard.classList.remove("flip");
+      secondCard.classList.remove("flip");
+      resetBoard();
+    }, 1500);
+  }
+
+  function resetBoard() {
+    [hasFlippedCard, lockBoard] = [false, false];
+    [firstCard, secondCard] = [null, null];
+  }
+
+  function showContinueButton() {
+    document.getElementById("success-feedback").style.display = "block";
+    document.getElementById("continue-btn").style.display = "block"; // Show the continue button
+  }
+</script>
+
+<style>
+  /* Hover effect for the 'Continue' button */
+  #continue-btn:hover {
+    background-color: #3498db;
+    transform: translateY(-5px); /* Slight lift effect */
+    box-shadow: 0px 8px 15px rgba(0, 123, 255, 0.5);
+  }
+</style>
+
+{% endblock %}

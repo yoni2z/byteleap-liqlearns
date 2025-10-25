@@ -1,0 +1,264 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container mt-5">
+  <h2 class="text-center fs-1 fw-bold">Word Hunt Game</h2>
+
+  <h4 class="mt-4 text-center">Find the following words:</h4>
+  <ul id="word-list" class="list-group">
+    {% for word in target_words %}
+    <li class="list-group-item text-center">{{ word }}</li>
+    {% endfor %}
+  </ul>
+
+  <!-- Circular Timer Display -->
+  <div class="timer-container d-flex justify-content-center align-items-center">
+    <div class="timer-circle">
+      <span id="time-left">60</span>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <h4 class="text-center">Letter Grid</h4>
+    <div
+      class="grid d-flex justify-content-center align-items-center"
+      id="letter-grid"
+    >
+      {% for row in grid %}
+      <div class="grid-row">
+        {% for letter in row %}
+        <div
+          class="grid-item"
+          onclick="selectLetter(this, {{ forloop.parentloop.counter0 }}, {{ forloop.counter0 }})"
+        >
+          {{ letter }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div
+    class="text-center d-flex flex-column justify-content-center align-items-center"
+  >
+    <button
+      id="check-btn"
+      class="btn mt-4"
+      style="background: linear-gradient(to bottom, #ffefd5, #ffe4b5)"
+      onclick="checkWords()"
+    >
+      Check
+    </button>
+    <p id="feedback" class="alert mt-3"></p>
+    <button
+      id="try-again-btn"
+      class="btn btn-danger mt-3"
+      style="display: none"
+      onclick="tryAgain()"
+    >
+      Try Again
+    </button>
+    <a
+      href="{% url 'word-sequencing' %}"
+      id="continue-btn"
+      class="btn btn-success mt-3 w-25"
+      style="display: none"
+    >
+      Continue
+    </a>
+  </div>
+</div>
+
+<style>
+  .timer-container {
+    margin-top: 20px;
+  }
+
+  .timer-circle {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 6px solid rgb(147, 4, 4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: linear-gradient(to bottom, #ffefd5, #ffe4b5);;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, 40px);
+    gap: 0;
+    margin-top: 20px;
+  }
+
+  .grid-item {
+    width: 40px;
+    height: 40px;
+    border: 1px solid #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    font-size: 18px;
+  }
+
+  .selected {
+    background-color: #d4edda;
+  }
+
+  .found {
+    background-color: #c3e6cb;
+    font-size: 24px;
+  }
+</style>
+
+<form id="award-points-form" method="POST" style="display: none">
+  {% csrf_token %}
+</form>
+
+<script>
+  let selectedLetters = [];
+  let lastSelected = null;
+  let targetWords = new Set(
+    [{% for word in target_words %}'{{ word|lower }}',{% endfor %}]
+  );
+
+  let timerInterval;
+  let timeLeft = 60;
+
+  let no_incorrect = 0;
+
+  function isValidSelection(row, col) {
+    if (!lastSelected) return true; // If there's no previous selection, allow any selection
+    const [lastRow, lastCol] = lastSelected;
+    return Math.abs(lastRow - row) <= 1 && Math.abs(lastCol - col) <= 1;
+  }
+
+  function selectLetter(element, row, col) {
+    // Skip if the letter is part of a previously found word
+    if (element.classList.contains('found')) return;
+
+    // Validate selection only for consecutive selections
+    if (!isValidSelection(row, col)) {
+      document.getElementById('feedback').textContent = "Select adjacent letters!";
+      return;
+    }
+
+    element.classList.toggle('selected');
+
+    if (element.classList.contains('selected')) {
+      selectedLetters.push([element, row, col]);
+      lastSelected = [row, col]; // Update last selected position
+    } else {
+      selectedLetters = selectedLetters.filter(
+        item => !(item[1] === row && item[2] === col)
+      );
+      lastSelected = selectedLetters.length
+        ? selectedLetters[selectedLetters.length - 1].slice(1)
+        : null;
+    }
+  }
+
+  function getCSRFTokenFromForm() {
+    const form = document.getElementById('award-points-form');
+    const csrfToken = form.querySelector('[name="csrfmiddlewaretoken"]').value;
+    return csrfToken;
+  }
+
+  function awardPoints(points, reason) {
+    const csrfToken = getCSRFTokenFromForm(); // Get CSRF token from hidden form
+
+    if (csrfToken) {
+      fetch("{% url 'award-points' %}", {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": csrfToken, // Include the CSRF token in the request headers
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          points: points,
+          reason: reason
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.message) {
+            console.log(data.message); // Optional feedback for debugging
+          }
+        })
+        .catch((error) => {
+          console.error("Error awarding points:", error);
+        });
+    } else {
+      console.error("CSRF token not found in the form");
+    }
+  }
+
+  function checkWords() {
+    const selectedWord = selectedLetters.map(item => item[0].textContent.trim()).join('').toLowerCase();
+
+    if (targetWords.has(selectedWord)) {
+      targetWords.delete(selectedWord);
+      selectedLetters.forEach(([element]) => {
+        element.classList.remove('selected');
+        element.classList.add('found'); // Mark as found
+      });
+      document.getElementById('feedback').textContent = `Great! You found: ${selectedWord}`;
+    } else {
+      resetSelection(); // Reset without highlighting
+      document.getElementById('feedback').textContent = 'Incorrect selection. Try again.';
+
+      no_incorrect += 1;
+      if (no_incorrect > 2){
+        awardPoints(-5, "Word Hunt Game Incorrect Answer");
+      }
+    }
+
+    // Check if all words are found
+    if (targetWords.size === 0) {
+      document.getElementById('feedback').textContent = 'Congratulations! All words found.';
+      document.getElementById('check-btn').style.display = 'none';
+      document.getElementById('continue-btn').style.display = 'block';
+      stopTimer();
+
+      awardPoints(25, "Word Hunt Game Win");
+    }
+
+    // Reset lastSelected to allow new word selections
+    lastSelected = null;
+    resetSelection(); // Clear the current selection after each check
+  }
+
+  function resetSelection() {
+    selectedLetters.forEach(([element]) => element.classList.remove('selected'));
+    selectedLetters = [];
+    lastSelected = null;
+  }
+
+  function tryAgain() {
+    location.reload();
+  }
+
+  function startTimer() {
+    timerInterval = setInterval(() => {
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        document.getElementById('feedback').textContent = 'Time is up! Try again.';
+        document.getElementById('check-btn').style.display = 'none';
+        document.getElementById('try-again-btn').style.display = 'block';
+      } else {
+        timeLeft--;
+        document.getElementById('time-left').textContent = timeLeft;
+      }
+    }, 1000);
+  }
+
+  function stopTimer() {
+    clearInterval(timerInterval);
+  }
+
+  window.onload = startTimer;
+</script>
+{% endblock %}

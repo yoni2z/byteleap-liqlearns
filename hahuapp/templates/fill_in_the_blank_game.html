@@ -1,0 +1,81 @@
+<!-- templates/fill_in_the_blank_game.html -->
+{% extends 'base.html' %} {% block content %}
+<div class="container mt-5 mb-5">
+  <div
+    class="d-flex justify-content-center align-items-center"
+    style="min-height: 60vh"
+  >
+    <div class="text-center">
+      <h2>Fill in the Blank</h2>
+      <form method="POST" onsubmit="return false;">
+        {% csrf_token %}
+        <p>
+          <!-- Display the question with input fields for blanks -->
+          {% for part in split_question %} {{ part }} {% if forloop.counter <= blanks %}
+          <!-- Provide text input for each blank -->
+          <input
+            type="text"
+            class="form-control w-25 d-inline-block"
+            placeholder="Your answer here"
+            name="user_answers[]"
+          />
+          {% endif %} {% endfor %}
+        </p>
+
+        <!-- Submit button -->
+        <button
+          class="btn mt-3"
+          style="background: linear-gradient(to bottom, #ffefd5, #ffe4b5)"
+          onclick="checkAnswer()"
+        >
+          Submit
+        </button>
+      </form>
+
+      <!-- Feedback after submission -->
+      <p id="feedback" class="mt-2"></p>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  function checkAnswer() {
+      const userAnswers = [];
+      const inputs = document.querySelectorAll('input[name="user_answers[]"]');
+      inputs.forEach(input => userAnswers.push(input.value.trim()));
+
+      // Send AJAX request with the answers
+      $.ajax({
+          url: "{% url 'fill-in-the-blank-game' %}",
+          type: "POST",
+          data: {
+              'user_answers[]': userAnswers,
+              'question_id': {{ question.id }},
+              'csrfmiddlewaretoken': '{{ csrf_token }}'
+          },
+          success: function(response) {
+              const feedbackElement = document.getElementById('feedback');
+              feedbackElement.textContent = response.message;
+              feedbackElement.className = response.message === "Correct!" ? 'text-success' : 'text-danger';
+
+              // If the answer is correct, load the next question
+              if (response.message === "Correct!") {
+                  const newQuestionParts = response.split_question;
+                  const questionElement = document.querySelector('p');
+                  questionElement.innerHTML = '';
+                  newQuestionParts.forEach((part, index) => {
+                      questionElement.innerHTML += part;
+                      if (index < response.blanks) {
+                          questionElement.innerHTML += '<input type="text" class="form-control w-25 d-inline-block" placeholder="Your answer here" name="user_answers[]">';
+                      }
+                  });
+              }
+          },
+          error: function(response) {
+              alert('An error occurred: ' + response.responseText);
+          }
+      });
+  }
+</script>
+{% endblock %}

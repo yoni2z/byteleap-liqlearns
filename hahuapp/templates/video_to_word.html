@@ -1,0 +1,101 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container text-center mt-5">
+  <h2>Guess the Word for the Video</h2>
+
+  <div class="mt-4">
+    <video
+      id="word-video"
+      src="{{ video_url }}"
+      controls
+      width="400px"
+      height="200px"
+      muted
+    ></video>
+  </div>
+
+  <div class="d-flex justify-content-center mt-4">
+    <div class="row w-50">
+      {% for choice in choices %}
+      <div class="col-6 mb-3 d-flex justify-content-center">
+        <button
+          class="btn choice-button"
+          data-word="{{ choice }}"
+          style="
+            width: 100%;
+            font-size: 24px;
+            background: linear-gradient(to bottom, #ffefd5, #ffe4b5);
+          "
+        >
+          {{ choice }}
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Feedback message and continue button -->
+  <div id="feedback" class="alert text-center mt-3" style="display: none"></div>
+
+  <div
+    class="text-center d-flex justify-content-center align-items-center mt-4"
+  >
+    <a
+      href="{% url 'video-to-word' %}"
+      id="next-button"
+      class="btn btn-success w-25"
+      style="display: none"
+    >
+      Continue
+    </a>
+  </div>
+</div>
+
+<script>
+  const correctAnswer = "{{ correct_answer }}"; // Correct word
+  const feedback = document.getElementById("feedback");
+  const nextButton = document.getElementById("next-button");
+  const video = document.getElementById("word-video"); // Video element
+
+  // Add event listeners to each choice button
+  document.querySelectorAll(".choice-button").forEach((button) => {
+    button.addEventListener("click", () => {
+      const selectedWord = button.getAttribute("data-word");
+
+      if (selectedWord === correctAnswer) {
+        // Correct guess
+        feedback.textContent = "Good work! You selected the correct word!";
+        feedback.className = "alert alert-success text-center mt-3";
+        feedback.style.display = "block";
+
+        // Highlight the correct answer button in green
+        button.style.borderColor = "green";
+
+        // Stop the video
+        video.pause();
+
+        // Show the next button and disable other choices
+        nextButton.style.display = "block";
+        disableAllButtons();
+      } else {
+        // Incorrect guess
+        feedback.textContent = "Try again!";
+        feedback.className = "alert alert-danger text-center mt-3";
+        feedback.style.display = "block";
+
+        // Highlight the incorrect button in red, then reset after 1 second
+        button.style.borderColor = "red";
+        setTimeout(() => {
+          button.style.borderColor = "";
+        }, 1000);
+      }
+    });
+  });
+
+  // Disable all buttons after the correct answer is chosen
+  function disableAllButtons() {
+    document.querySelectorAll(".choice-button").forEach((button) => {
+      button.disabled = true;
+    });
+  }
+</script>
+{% endblock %}

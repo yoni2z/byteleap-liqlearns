@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Story Questions Management - Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f7fc;
+            color: #333;
+        }
+        .sidebar {
+            background-color: #ffffff;
+            color: #333;
+            height: 100vh;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 200px;
+            padding-top: 30px;
+        }
+        .sidebar h2 {
+            font-size: 1.75rem;
+            margin-bottom: 40px;
+            text-align: center;
+            color: #2c3e50;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 30px;
+        }
+        .header {
+            background-color: #2c3e50;
+            padding: 20px;
+            color: white;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <h2>Admin Panel</h2>
+        <a href="{% url 'custom_admin_page' %}" class="list-group-item list-group-item-action">Dashboard</a>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <div class="header">
+            <h1>Manage Story Questions</h1>
+        </div>
+
+        <div class="container mt-5">
+            <h2 class="text-center mb-4">Add New Story Question</h2>
+            <form method="post" class="mb-4">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" name="create" class="btn btn-primary">Create</button>
+            </form>
+
+            <h3>Existing Story Questions</h3>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Part</th>
+                        <th>Question Text</th>
+                        <th>Correct Answer</th>
+                        <th>Options</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for question in questions %}
+                        <tr>
+                            <td>{{ question.id }}</td>
+                            <td>{{ question.part.story.title }} - Part {{ question.part.part_number }}</td>
+                            <td>{{ question.question_text }}</td>
+                            <td>{{ question.correct_answer }}</td>
+                            <td>{{ question.options|join:", " }}</td>
+                            <td>
+                                <form method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="question_id" value="{{ question.id }}">
+                                    <input type="text" name="question_text" value="{{ question.question_text }}" required>
+                                    <input type="text" name="correct_answer" value="{{ question.correct_answer }}" required>
+                                    <input type="text" name="options" value="{{ question.options|join:', ' }}" required>
+                                    <button type="submit" name="update" class="btn btn-warning btn-sm">Update</button>
+                                    <button type="submit" name="delete" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

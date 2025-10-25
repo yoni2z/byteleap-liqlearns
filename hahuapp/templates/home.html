@@ -1,0 +1,675 @@
+{% extends 'base.html' %} {% load static %} {% block title %} ሊቅ Learns
+{%endblock %} {% block content %}
+<!-- Hero Section -->
+<section
+  class="text-center bg-light py-5 my-5"
+  style="background-color: #3498db"
+>
+  <div class="container">
+    <h1 class="display-4 fw-bold animated fadeInDown">Welcome to ሊቅ Learns</h1>
+    <p class="lead animated fadeInUp">
+      Master Amharic through fun and interactive learning games and courses!
+    </p>
+    <a href="{% url 'signup' %}" class="btn" style="background-color: #e67e22; color: white"
+      >Get Started</a
+    >
+    <a href="{% url 'slide_view' %}" class="btn btn-outline-secondary">Browse Courses</a>
+  </div>
+</section>
+
+<!-- Key Features Section -->
+<section
+  class="py-5"
+  style="
+    font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+    background-color: #ffefd5;
+  "
+>
+  <div class="container">
+    <h2
+      class="text-center mb-4 fs-1 fw-bold"
+      style="font-family: 'Comic Sans MS', sans-serif; color: #ff5733"
+    >
+      🌟 Key Features 🌟
+    </h2>
+    <div class="row text-center">
+      <div class="col-md-4 mb-4">
+        <div
+          class="card border-3 shadow-lg"
+          style="
+            background: linear-gradient(to bottom, #ffd700, #ffc107);
+            border-radius: 20px;
+          "
+        >
+          <div class="card-body d-flex flex-column align-items-center">
+            <img
+              src="https://img.icons8.com/color/96/joystick.png"
+              alt="Interactive Games"
+              class="mb-3"
+            />
+            <h3
+              class="card-title"
+              style="font-family: 'Comic Sans MS', sans-serif; color: #2d4059"
+            >
+              🎮 Interactive Games
+            </h3>
+            <p class="card-text" style="color: #555">
+              Play games that make learning fun and exciting!
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div
+          class="card border-3 shadow-lg"
+          style="
+            background: linear-gradient(to bottom, #add8e6, #87cefa);
+            border-radius: 20px;
+          "
+        >
+          <div class="card-body d-flex flex-column align-items-center">
+            <img
+              src="https://img.icons8.com/color/96/books.png"
+              alt="Comprehensive Courses"
+              class="mb-3"
+            />
+            <h3
+              class="card-title"
+              style="font-family: 'Comic Sans MS', sans-serif; color: #2d4059"
+            >
+              📚 Comprehensive Courses
+            </h3>
+            <p class="card-text" style="color: #555">
+              Master Amharic with step-by-step lessons!
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div
+          class="card border-3 shadow-lg"
+          style="
+            background: linear-gradient(to bottom, #ff7f7f, #fa8072);
+            border-radius: 20px;
+          "
+        >
+          <div class="card-body d-flex flex-column align-items-center">
+            <img
+              src="https://img.icons8.com/color/96/trophy.png"
+              alt="Achievements"
+              class="mb-3"
+            />
+            <h3
+              class="card-title"
+              style="font-family: 'Comic Sans MS', sans-serif; color: #2d4059"
+            >
+              🏆 Achievements
+            </h3>
+            <p class="card-text" style="color: #555">
+              Earn rewards and badges as you progress!
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing Section -->
+<section
+  id="pricing"
+  class="py-5"
+  style="
+    font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+    background-color: #ffefd5;
+  "
+>
+  <div class="container">
+    <h2 class="text-center mb-5 fs-1 fw-bold">💰 Pricing Plans</h2>
+    <div class="row text-center">
+      {% for level in levels %}
+      <div class="col-md-3 mb-4">
+        <div
+          class="card shadow-lg"
+          style="background-color: {% cycle '#ffeaa7' '#a8e6cf' '#74b9ff' '#fab1a0' %}; border-radius: 20px"
+        >
+          <div class="card-body">
+            <h3
+              class="card-title"
+              style="font-family: 'Comic Sans MS', sans-serif"
+            >
+              {{ level.name }}
+            </h3>
+            <p>{{ level.description }}</p>
+            <ul class="list-unstyled mb-3">
+              <li>✅ Modules: {{ level.modules.count }}</li>
+              <li>✅ Order: {{ level.order }}</li>
+            </ul>
+            <a
+              href="{% url 'payment_page' %}?level_id={{ level.id }}"
+              class="btn btn-warning"
+              >Sign Up Now</a
+            >
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Featured Games Section -->
+<section class="py-5" style="background-color: #ffefd5;">
+  <div class="container">
+    <h2
+      class="text-center mb-4 fs-1 fw-bold"
+      style="font-family: 'Comic Sans MS', sans-serif; color: #ff5733"
+    >
+      🎮 Featured Games
+    </h2>
+    <div class="row">
+      <div class="col-md-4">
+        <div class="card shadow-sm">
+          <img
+            src="{% static 'images/game.jpg' %}"
+            class="card-img-top"
+            alt="Game Image"
+          />
+          <div class="card-body text-center">
+            <h5 class="card-title">🐘 Learn With Animals</h5>
+            <p>Match animals with their Amharic names!</p>
+            <!--<a href="#" class="btn btn-warning">Play Now</a>-->
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card shadow-sm">
+          <img
+            src="{% static 'images/game.jpg' %}"
+            class="card-img-top"
+            alt="Game Image"
+          />
+          <div class="card-body text-center">
+            <h5 class="card-title">🎨 Color Matching</h5>
+            <p>Learn colors while having fun!</p>
+            <!--<a href="#" class="btn btn-success">Play Now</a>-->
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card shadow-sm">
+          <img
+            src="{% static 'images/game.jpg' %}"
+            class="card-img-top"
+            alt="Game Image"
+          />
+          <div class="card-body text-center">
+            <h5 class="card-title">✏️ Letter Puzzle</h5>
+            <p>Arrange Amharic letters to win!</p>
+            <!--<a href="#" class="btn btn-primary">Play Now</a>-->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="background: linear-gradient(to right, #ff9a9e, #fad0c4)">
+  <div id="carouselExample" class="carousel slide">
+    <div class="carousel-inner p-5">
+      <div class="carousel-item active">
+        <div class="row">
+          <div class="col">
+            <div class="d-flex flex-column align-items-center text-center">
+              <img
+                src="{% static 'images/student.jpg' %}"
+                class="d-block rounded-circle shadow"
+                alt="Student"
+                width="150px"
+                height="150px"
+                style="object-fit: cover; border: 5px solid #ffcc00"
+              />
+              <p
+                class="p-3 w-75 text-white fs-5"
+                style="font-family: 'Comic Sans MS'"
+              >
+                🌟 "What a Fun Learning Experience!" 🌟
+              </p>
+              <h4 style="color: #ffcc00; font-family: 'Comic Sans MS'">
+                Student 1
+              </h4>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Repeat similar structure for other carousel items -->
+      <div class="carousel-item active">
+        <div class="row">
+          <div class="col">
+            <div class="d-flex flex-column align-items-center text-center">
+              <img
+                src="{% static 'images/student.jpg' %}"
+                class="d-block rounded-circle shadow"
+                alt="Student"
+                width="150px"
+                height="150px"
+                style="object-fit: cover; border: 5px solid #ffcc00"
+              />
+              <p
+                class="p-3 w-75 text-white fs-5"
+                style="font-family: 'Comic Sans MS'"
+              >
+                🌟 "What a Fun Learning Experience!" 🌟
+              </p>
+              <h4 style="color: #ffcc00; font-family: 'Comic Sans MS'">
+                Student 2
+              </h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button
+      class="carousel-control-prev"
+      type="button"
+      data-bs-target="#carouselExample"
+      data-bs-slide="prev"
+    >
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Previous</span>
+    </button>
+    <button
+      class="carousel-control-next"
+      type="button"
+      data-bs-target="#carouselExample"
+      data-bs-slide="next"
+    >
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Next</span>
+    </button>
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-5" style="background-color: #ffefd5;">
+  <div class="container">
+    <h2
+      class="text-center mb-5 fs-1 fw-bold"
+      style="color: #ff5733; font-family: 'Fredoka One', sans-serif"
+    >
+      🎉 How It Works 🎈
+    </h2>
+    <div class="row text-center">
+      <!-- Card 1 -->
+      <div class="col-md-4 mb-4">
+        <div
+          class="card h-100 shadow border-0 p-3"
+          style="background-color: #fce38a; border-radius: 20px"
+        >
+          <div class="card-body">
+            <div class="mb-3">
+              <img
+                src="https://cdn-icons-png.flaticon.com/512/2922/2922561.png"
+                alt="Sign Up Icon"
+                style="width: 70px"
+              />
+            </div>
+            <span
+              class="card-title fs-1 fw-bold"
+              style="color: #34495e; font-family: 'Fredoka One', sans-serif"
+            >
+              1. Sign Up 🖊️
+            </span>
+            <p class="card-text mt-4" style="color: #34495e; font-size: 18px">
+              Make your account to start the fun journey! 🎊
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="col-md-4 mb-4">
+        <div
+          class="card h-100 shadow border-0 p-3"
+          style="background-color: #ff9a76; border-radius: 20px"
+        >
+          <div class="card-body">
+            <div class="mb-3">
+              <img
+                src="https://cdn-icons-png.flaticon.com/512/2617/2617864.png"
+                alt="Explore Icon"
+                style="width: 70px"
+              />
+            </div>
+            <span
+              class="card-title fs-1 fw-bold"
+              style="color: #34495e; font-family: 'Fredoka One', sans-serif"
+            >
+              2. Explore 📚
+            </span>
+            <p class="card-text mt-4" style="color: #34495e; font-size: 18px">
+              Find amazing courses & games to play! 🌈
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="col-md-4 mb-4">
+        <div
+          class="card h-100 shadow border-0 p-3"
+          style="background-color: #d4a5a5; border-radius: 20px"
+        >
+          <div class="card-body">
+            <div class="mb-3">
+              <img
+                src="https://cdn-icons-png.flaticon.com/512/3031/3031126.png"
+                alt="Rewards Icon"
+                style="width: 70px"
+              />
+            </div>
+            <span
+              class="card-title fs-1 fw-bold"
+              style="color: #34495e; font-family: 'Fredoka One', sans-serif"
+            >
+              3. Earn Rewards 🏆
+            </span>
+            <p class="card-text mt-4" style="color: #34495e; font-size: 18px">
+              Play, learn, and collect points to win cool prizes! 🎁
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Leaderboard Highlights Section -->
+<section class="py-5" style="background-color: #ffefd5;">
+  <div class="container">
+    <h2
+      class="text-center mb-5 fs-1 fw-bold"
+      style="color: #ff5733; font-family: 'Fredoka One', sans-serif"
+    >
+      🏆 Leaderboard Highlights 🎮
+    </h2>
+    <div class="row">
+      <!-- Leaderboard Players -->
+      <div class="col-md-8">
+        <div class="row">
+          <!-- Top Players (Dynamic) -->
+          {% for user in top_3 %}
+          <div class="col-md-4 mb-4">
+            <div
+              class="card h-100 shadow border-0"
+              style="
+                background: linear-gradient(
+                  135deg,
+                  {% if forloop.counter == 1 %}#ffcc33,
+                  #ffc107{% elif forloop.counter == 2 %}#c0c0c0,
+                  #d3d3d3{% else %}#cd7f32,
+                  #d27f43{% endif %}
+                );
+                border-radius: 20px;
+                transition: transform 0.3s;
+              "
+            >
+              <div
+                class="card-body text-center d-flex flex-column justify-content-center align-items-center"
+              >
+                <img
+                  src="{% if forloop.counter == 1 %}https://cdn-icons-png.flaticon.com/512/2271/2271064.png{% elif forloop.counter == 2 %}https://cdn-icons-png.flaticon.com/512/2271/2271065.png{% else %}https://cdn-icons-png.flaticon.com/512/2271/2271066.png{% endif %}"
+                  alt="Trophy Icon"
+                  style="width: 70px"
+                />
+                <h5
+                  class="card-title mt-3 fs-4 fw-bold"
+                  style="color: #2d4059; font-family: 'Fredoka One', sans-serif"
+                >
+                  🥇 {{ user.full_name }}
+                </h5>
+                <p class="card-text" style="color: #2d4059; font-size: 18px">
+                  Points: {{ user.aura_points }}
+                </p>
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <p>No users available to display.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Image Section -->
+      <div class="col-md-4 d-flex align-items-center">
+        <div class="text-center">
+          <img
+            src="https://cdn-icons-png.flaticon.com/512/2921/2921822.png"
+            alt="Leaderboard Highlights"
+            class="img-fluid rounded shadow-lg mb-4"
+            style="max-width: 100%; border-radius: 20px"
+          />
+          <a href="{% url 'leaderboard' %}" class="btn btn-primary btn-lg">
+            View Full Leaderboard
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Blog/News Section -->
+<section class="py-5" style="background-color: #ffefd5;">
+  <div class="container">
+    <h2
+      class="text-center mb-5 fs-1 fw-bold"
+      style="color: #ff5733; font-family: 'Fredoka One', sans-serif"
+    >
+      📝 Latest Blog Posts
+    </h2>
+    <div class="row">
+      <div class="col-md-6 mb-4">
+        <div
+          class="card shadow-sm border-0"
+          style="
+            border-radius: 20px;
+            transition: transform 0.3s;
+            background-color: #ffefc1;
+          "
+        >
+          <img
+            src="{% static 'images/announcement.jpg' %}"
+            class="card-img-top"
+            alt="Blog Image"
+            style="
+              height: 200px;
+              object-fit: cover;
+              border-radius: 20px 20px 0 0;
+            "
+          />
+          <div class="card-body">
+            <h5
+              class="card-title fw-bold"
+              style="color: #2d4059; font-family: 'Fredoka One', sans-serif"
+            >
+              📚 Blog Post Title
+            </h5>
+            <p class="card-text" style="color: #555; font-size: 16px">
+              A fun description of the blog post to spark curiosity and
+              excitement!
+            </p>
+            <a
+              href="#"
+              class="btn"
+              style="
+                background-color: #ff5733;
+                color: white;
+                transition: background-color 0.3s;
+                border-radius: 30px;
+                font-weight: bold;
+                font-size: 16px;
+              "
+            >
+              Read More
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 mb-4">
+        <div
+          class="card shadow-sm border-0"
+          style="
+            border-radius: 20px;
+            transition: transform 0.3s;
+            background-color: #c1f5ff;
+          "
+        >
+          <img
+            src="{% static 'images/announcement.jpg' %}"
+            class="card-img-top"
+            alt="Blog Image"
+            style="
+              height: 200px;
+              object-fit: cover;
+              border-radius: 20px 20px 0 0;
+            "
+          />
+          <div class="card-body">
+            <h5
+              class="card-title fw-bold"
+              style="color: #2d4059; font-family: 'Fredoka One', sans-serif"
+            >
+              📖 Blog Post Title 2
+            </h5>
+            <p class="card-text" style="color: #555; font-size: 16px">
+              A fun description of the blog post to spark curiosity and
+              excitement!
+            </p>
+            <a
+              href="#"
+              class="btn"
+              style="
+                background-color: #33c3ff;
+                color: white;
+                transition: background-color 0.3s;
+                border-radius: 30px;
+                font-weight: bold;
+                font-size: 16px;
+              "
+            >
+              Read More
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Latest Event Section -->
+<div
+  class="container my-5"
+  style="
+    background-color: #ffffff;
+    padding: 20px;
+  "
+>
+  <h2
+    class="text-center mb-4 fs-1 fw-bold"
+    style="color: #ff69b4; font-family: 'Fredoka One', sans-serif"
+  >
+    🎉 Latest Event
+  </h2>
+
+  {% if latest_event %}
+  <div
+    class="card mx-auto"
+    style="
+      max-width: 600px;
+      background: linear-gradient(to bottom, #ffefd5, #ffe4b5);
+      border: 2px solid #ffa07a;
+      border-radius: 20px;
+    "
+  >
+    {% if latest_event.image %}
+    <img
+      src="{{ latest_event.image.url }}"
+      class="card-img-top"
+      alt="{{ latest_event.title }}"
+      style="border-radius: 20px 20px 0 0"
+    />
+    {% endif %}
+    <div class="card-body">
+      <h5
+        class="card-title fs-4 fw-bold"
+        style="color: #2d4059; font-family: 'Fredoka One', sans-serif"
+      >
+        🌟 {{ latest_event.title }}
+      </h5>
+      <p class="card-text" style="color: #555">
+        {{ latest_event.description|truncatewords:30 }}
+      </p>
+      <p style="color: #555; font-size: 16px">
+        <strong>📅 Start Date:</strong> {{ latest_event.start_date|date:"F j, Y, g:i a" }}
+      </p>
+      <p style="color: #555; font-size: 16px">
+        <strong>📅 End Date:</strong> {{ latest_event.end_date|date:"F j, Y, g:i a" }}
+      </p>
+      <p style="color: #555; font-size: 16px">
+        <strong>📍 Location:</strong> {{ latest_event.location }}
+      </p>
+      <a
+        href="/events/"
+        class="btn"
+        style="
+          background-color: #ff69b4;
+          color: white;
+          border-radius: 30px;
+          font-size: 16px;
+          font-weight: bold;
+          transition: background-color 0.3s;
+        "
+      >
+        View All Events
+      </a>
+    </div>
+  </div>
+  {% else %}
+  <div
+    class="alert alert-info text-center"
+    role="alert"
+    style="font-size: 18px"
+  >
+    🚧 No events available at the moment. Stay tuned!
+  </div>
+  {% endif %}
+</div>
+
+<!-- Custom CSS for Animation and Design -->
+<style>
+  body {
+    font-family: "Comic Sans MS", "Chalkboard SE", sans-serif;
+  }
+
+  /* Add floating animation for fun decorative elements */
+  @keyframes float {
+    0% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+    100% {
+      transform: translateY(0px);
+    }
+  }
+
+  /* Styling for buttons */
+  .btn:hover {
+    background-color: #d35400 !important;
+    color: white !important;
+    text-decoration: none;
+  }
+</style>
+
+{% endblock %}

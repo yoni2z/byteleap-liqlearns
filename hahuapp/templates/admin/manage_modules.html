@@ -1,0 +1,15 @@
+<h1>Manage Modules for Level: {{ level.name }}</h1>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Add Module</button>
+</form>
+<ul>
+    {% for module in modules %}
+        <li>
+            {{ module.name }} 
+            <a href="{% url 'manage_slides' module.id %}">Manage Slides</a>
+        </li>
+    {% endfor %}
+</ul>
+<a href="{% url 'manage_levels' %}">Back to Levels</a>

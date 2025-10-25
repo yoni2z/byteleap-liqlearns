@@ -1,0 +1,49 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container mt-5 mb-5">
+  <h1 class="text-center mb-4">Sound Sorting Activity</h1>
+
+  {% if feedback %}
+  <div class="alert alert-info text-center mb-4">{{ feedback }}</div>
+  {% endif %}
+
+  <h3 class="text-center">Listen to the Sounds</h3>
+  <div class="list-group mb-4">
+    {% for sound in selected_sounds %}
+    <div
+      class="list-group-item d-flex justify-content-between align-items-center"
+    >
+      <audio
+        id="sound{{ forloop.counter }}"
+        src="{{ sound.sound_field.url }}"
+        preload="auto"
+      ></audio>
+      <button
+        class="btn"
+        onclick="document.getElementById('sound{{ forloop.counter }}').play()"
+        style="background: linear-gradient(to bottom, #ffefd5, #ffe4b5)"
+      >
+        Play Sound {{ forloop.counter }}
+      </button>
+      <span>{{ sound.letter }}</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <form method="POST">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="user_answer" class="form-label"
+        >Enter the Sorted Sequence of Letters:</label
+      >
+      <input
+        type="text"
+        name="user_answer"
+        class="form-control"
+        placeholder="e.g. ABCDE"
+        required
+      />
+    </div>
+    <button type="submit" class="btn btn-success">Submit Answer</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Voice Recording Practice</h1>
+    
+    <p class="text-center lead">Talk about any topic of your choice and upload your voice recording.</p>
+
+    <div class="d-flex justify-content-center mt-4">
+        <form method="POST" enctype="multipart/form-data" class="border p-4 rounded shadow-sm bg-light">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="text-center mt-3">
+                <button type="submit" class="btn btn-primary btn-lg">Upload Recording</button>
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

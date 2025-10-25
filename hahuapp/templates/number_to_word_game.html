@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 60vh;">
+        <div class="text-center">
+            <h2>Guess the Word</h2>
+            <p>What is the word for the number <strong>{{ number.number }}</strong> / <strong>{{ number.amharic_word }}</strong>?</p>
+            
+            <form id="guess-form" method="POST" onsubmit="return false;">
+                {% csrf_token %}
+                <input type="text" id="user_answer" class="form-control w-100" placeholder="Write the word here" name="user_answer">
+                <button class="btn btn-primary mt-3" onclick="checkAnswer()">Submit</button>
+            </form>
+            
+            <p id="feedback" class="mt-2"></p>
+            
+            <!-- Next Question Button -->
+            <button class="btn btn-secondary mt-3" onclick="loadNextQuestion()">Next Question</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function checkAnswer() {
+        const userAnswer = document.getElementById('user_answer').value.trim();
+
+        $.ajax({
+            url: "{% url 'number_to_word_game' %}",
+            type: "POST",
+            data: {
+                'user_answer': userAnswer,
+                'number_id': {{ number.id }},
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                const feedbackElement = document.getElementById('feedback');
+                feedbackElement.textContent = response.message;
+                feedbackElement.className = response.message === "Correct!" ? 'text-success' : 'text-danger';
+            }
+        });
+    }
+
+    function loadNextQuestion() {
+        // Redirect to the same page to load the next question
+        window.location.reload();
+    }
+</script>
+{% endblock %}

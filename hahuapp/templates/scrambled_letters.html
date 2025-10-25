@@ -1,0 +1,151 @@
+{% extends "base.html" %} {% block content %}
+<div
+  class="container mt-5 text-center d-flex flex-column justify-content-center align-items-center"
+  style="
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  "
+>
+  <h2 style="font-family: 'Comic Sans MS', sans-serif;">
+    Scrambled Letters Game
+  </h2>
+  <p style="font-family: 'Comic Sans MS', sans-serif;">
+    Write the letters in alphabetical order:
+    <strong style="font-weight: bold; font-size: 1.2em"
+      >{{ scrambled_word }}</strong
+    >
+  </p>
+
+  <!-- ContentEditable Div for User Guess -->
+  <div
+    id="guess-input"
+    class="editable-input"
+    contenteditable="true"
+    placeholder="Type the letters in alphabetical order"
+    style="background: #fff5ee; border: 2px dashed #ffe4b5;"
+  ></div>
+
+  <!-- Submit Button -->
+  <button
+    onclick="checkAnswer()"
+    style="
+      background:  linear-gradient(to bottom, #ffefd5, #ffe4b5);
+      font-family: 'Comic Sans MS', sans-serif;
+      font-size: 16px;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      margin-top: 10px;
+      cursor: pointer;
+      box-shadow: 2px 4px rgba(0, 0, 0, 0.1);
+    "
+    onmouseover="this.style.backgroundColor='#ff7f50';"
+    onmouseout="this.style.backgroundColor='#ffa07a';"
+  >
+    Submit
+  </button>
+
+  <!-- Feedback Section -->
+  <p
+    id="feedback"
+    style="
+      font-family: 'Comic Sans MS', sans-serif;
+      font-size: 18px;
+      color: #dc143c;
+      margin-top: 15px;
+    "
+  ></p>
+
+  <!-- Continue Button (Initially Hidden) -->
+  <a
+    href="{% url 'timed-writing' %}"
+    id="continue-btn"
+    class="btn btn-primary mt-3"
+    style="
+      display: none;
+      background-color: #32cd32;
+      color: white;
+      font-family: 'Comic Sans MS', sans-serif;
+      font-size: 16px;
+      padding: 10px 20px;
+      border-radius: 10px;
+      box-shadow: 2px 4px rgba(0, 0, 0, 0.1);
+    "
+  >
+    Continue
+  </a>
+</div>
+
+<script>
+  function checkAnswer() {
+    const inputDiv = document.getElementById("guess-input");
+    const userGuess = inputDiv.textContent.trim(); // Get user input
+    const feedback = document.getElementById("feedback");
+    const continueBtn = document.getElementById("continue-btn");
+
+    // Clear content to re-render with highlighting
+    inputDiv.innerHTML = "";
+
+    // Get correct letters in alphabetical order
+    const correctLetters = "{{ scrambled_word }}".split("").sort().join("");
+
+    // Highlight letters based on correctness
+    for (let i = 0; i < correctLetters.length; i++) {
+      const charSpan = document.createElement("span");
+      charSpan.textContent = userGuess[i] || ""; // Handle cases where user input is shorter
+
+      if (charSpan.textContent === correctLetters[i]) {
+        charSpan.style.color = "green"; // Correct letter in correct position
+      } else if (userGuess.includes(correctLetters[i])) {
+        charSpan.style.color = "red"; // Correct letter but in wrong position
+      } else {
+        charSpan.style.color = "black"; // Letter not in the correct answer
+      }
+
+      inputDiv.appendChild(charSpan);
+    }
+
+    // Provide overall feedback
+    if (
+      userGuess.length === correctLetters.length &&
+      userGuess === correctLetters
+    ) {
+      feedback.textContent = "Correct order! 🎉";
+      feedback.style.color = "green";
+      inputDiv.style.borderColor = "green";
+      inputDiv.setAttribute("contenteditable", "false"); // Disable editing
+      continueBtn.style.display = "inline-block"; // Show continue button
+    } else {
+      feedback.textContent = "Incorrect order! Keep trying.";
+      feedback.style.color = "red";
+      inputDiv.style.borderColor = "red";
+    }
+  }
+</script>
+
+<style>
+  .editable-input {
+    margin: 10px 0;
+    padding: 10px;
+    width: 80%;
+    min-height: 40px;
+    border-radius: 15px;
+    border: 2px dashed #ffa07a;
+    white-space: nowrap;
+    overflow-x: auto;
+    font-family: "Comic Sans MS", sans-serif;
+    color: #8b0000;
+  }
+
+  .editable-input:empty::before {
+    content: attr(placeholder);
+    color: #ffa07a;
+  }
+
+  #feedback {
+    margin-top: 10px;
+    font-size: 18px;
+  }
+</style>
+{% endblock %}

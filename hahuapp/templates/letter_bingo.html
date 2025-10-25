@@ -1,0 +1,78 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container text-center mt-5">
+  <h1
+    class="mb-4"
+    style="font-family: 'Fredoka One', sans-serif; color: #ff5733"
+  >
+    🎉 Amharic Letter Bingo 🎉
+  </h1>
+  <div
+    class="card p-4 shadow"
+    style="
+      background: linear-gradient(to bottom, #ffefd5, #ffe4b5);
+      border-radius: 15px;
+    "
+  >
+    <h2 style="color: #2c3e50; font-family: 'Comic Sans MS', sans-serif">
+      Match the Letter Below:
+    </h2>
+    <div
+      class="display-4 mb-3"
+      style="font-size: 3.5rem; font-weight: bold; color: #2c3e50"
+    >
+      {{ random_letter }}
+    </div>
+    <div class="row justify-content-center">
+      {% for choice in choices %}
+      <div class="col-md-3 mb-3">
+        <button
+          class="btn btn-lg choice-btn"
+          data-letter="{{ choice }}"
+          style="
+            width: 100%;
+            padding: 20px;
+            font-size: 1.5rem;
+            font-family: 'Fredoka One', sans-serif;
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, background-color 0.3s;
+          "
+          onmouseover="this.style.backgroundColor='#2980b9'; this.style.transform='scale(1.05)';"
+          onmouseout="this.style.backgroundColor='#3498db'; this.style.transform='scale(1)';"
+        >
+          {{ choice }}
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div id="result" class="mt-4"></div>
+</div>
+
+<script>
+  const bingoUrl = "{% url 'letter-memory' %}";
+  document.querySelectorAll(".choice-btn").forEach((button) => {
+    button.addEventListener("click", function () {
+      const selectedLetter = this.getAttribute("data-letter");
+      const correctLetter = "{{ random_letter }}";
+      let resultDiv = document.getElementById("result");
+
+      if (selectedLetter === correctLetter) {
+        resultDiv.innerHTML = `
+                    <div class="alert alert-success" style="font-size: 1.2rem; font-weight: bold; color: #155724;">
+                        🎉 Correct! Great Job!
+                    </div> 
+                    <a href="${bingoUrl}" class="btn btn-outline-primary btn-lg mt-3" style="border-radius: 10px;">Continue</a>`;
+      } else {
+        resultDiv.innerHTML = `
+                    <div class="alert alert-danger" style="font-size: 1.2rem; font-weight: bold; color: #721c24;">
+                        ❌ Try Again!
+                    </div>`;
+      }
+    });
+  });
+</script>
+{% endblock %}

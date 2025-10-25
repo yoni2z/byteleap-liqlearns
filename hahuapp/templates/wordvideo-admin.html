@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Word Video</title>
+    
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f7fc;
+            color: #333;
+        }
+        .sidebar {
+            background-color: #ffffff;
+            color: #333;
+            height: 100vh;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 200px;
+            padding-top: 30px;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+        .sidebar h2 {
+            font-size: 1.75rem;
+            margin-bottom: 40px;
+            text-align: center;
+            color: #2c3e50;
+        }
+        .sidebar a {
+            color: #333;
+            padding: 15px 25px;
+            text-decoration: none;
+            display: block;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .sidebar a:hover {
+            background-color: #e0e0e0;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 30px;
+        }
+        .header {
+            background-color: #2c3e50;
+            padding: 20px;
+            color: white;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 500;
+        }
+        /* Video Styles */
+        video {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            border: 3px solid #2c3e50;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease-in-out;
+        }
+        video:hover {
+            transform: scale(1.05);
+        }
+        .video-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        /* Modal Styles */
+        .modal-body input[type="file"] {
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <div class="text-center">
+            <h2>Admin Panel</h2>
+        </div>
+        <div class="list-group">
+            <a href="{% url 'custom_admin_page' %}" class="list-group-item list-group-item-action">Dashboard</a>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="header">
+            <div class="container">
+                <h1>Manage Word Video</h1>
+                <p class="fs-4 mt-3">Welcome back, {{ request.user.username }}! We're glad to have you here.</p>
+            </div>
+        </div>
+
+        <!-- Content Block (Override in child templates) -->
+        <div class="container">
+            <h2 class="text-center mb-4">Manage Word Video</h2>
+
+            <!-- Create or Update Word Video -->
+            <div class="card p-4 mb-4 shadow">
+                <h4 class="mb-3">{% if form.instance.pk %}Edit Word Video{% else %}Create New Word Video{% endif %}</h4>
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="btn btn-primary" name="submit">
+                        {% if form.instance.pk %}Update{% else %}Create{% endif %}
+                    </button>
+                </form>
+            </div>
+
+            <!-- List of Existing Word Videos -->
+            <h4 class="mb-3">Existing Word Videos</h4>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Word</th>
+                        <th>Video</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for word_video in word_videos %}
+                        <tr>
+                            <td>{{ word_video.word }}</td>
+                            <td>
+                                <!-- Centered Video Player with Hover Effect -->
+                                <div class="video-container">
+                                    <video controls>
+                                        <source src="{{ word_video.video_file.url }}" type="video/mp4">
+                                        Your browser does not support the video tag.
+                                    </video>
+                                </div>
+                            </td>
+                            <td>
+                                <!-- Edit Button with Modal Trigger -->
+                                <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editModal{{ word_video.id }}">Edit</button>
+                                <!-- Delete Button -->
+                                <form method="POST" action="{% url 'word_video_admin' %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="id" value="{{ word_video.id }}">
+                                    <button type="submit" class="btn btn-danger" name="delete">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+
+                        <!-- Modal for Edit Form -->
+                        <div class="modal fade" id="editModal{{ word_video.id }}" tabindex="-1" aria-labelledby="editModalLabel{{ word_video.id }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="editModalLabel{{ word_video.id }}">Edit Word Video</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form method="POST" enctype="multipart/form-data">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="id" value="{{ word_video.id }}">
+                                            <div class="mb-3">
+                                                <label for="word" class="form-label">Word</label>
+                                                <input type="text" class="form-control" name="word" value="{{ word_video.word }}">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="video_file" class="form-label">Video File</label>
+                                                <input type="file" class="form-control" name="video_file">
+                                                <small class="form-text text-muted">Leave empty to keep the existing video.</small>
+                                            </div>
+                                            <button type="submit" class="btn btn-warning" name="submit">Update</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

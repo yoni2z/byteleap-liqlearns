@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Letter Image Admin</title>
+
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f7fc;
+            color: #333;
+        }
+        .sidebar {
+            background-color: #ffffff;
+            color: #333;
+            height: 100vh;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            padding-top: 30px;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+        .sidebar h2 {
+            font-size: 1.75rem;
+            margin-bottom: 40px;
+            text-align: center;
+            color: #2c3e50;
+        }
+        .sidebar a {
+            color: #333;
+            padding: 15px 25px;
+            text-decoration: none;
+            display: block;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .sidebar a:hover {
+            background-color: #e0e0e0;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 30px;
+        }
+        .header {
+            background-color: #2c3e50;
+            padding: 20px;
+            color: white;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <div class="text-center">
+            <h2>Admin Panel</h2>
+        </div>
+        <div class="list-group">
+            <a href="{% url 'custom_admin_page' %}" class="list-group-item list-group-item-action">Dashboard</a>
+    
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="header">
+            <div class="container">
+                <h1>Letter Image Admin</h1>
+                <p class="fs-4 mt-3">Manage your letter image records effectively.</p>
+            </div>
+        </div>
+
+        <!-- Success Messages -->
+        {% if messages %}
+            <div class="alert alert-success">
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Create/Update Form -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h3 class="card-title">Add or Update Letter Image</h3>
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="id" id="image_id">
+                    <div class="mb-3">
+                        <label for="letter" class="form-label">Letter</label>
+                        <input type="text" class="form-control" id="letter" name="letter" placeholder="Enter letter (e.g., A)" maxlength="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="image" class="form-label">Image File</label>
+                        <input type="file" class="form-control" id="image" name="image">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- List of Letter Images -->
+        <h3>Existing Letter Images</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Letter</th>
+                    <th>Image</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for letter_image in letter_images %}
+                    <tr>
+                        <td>{{ letter_image.id }}</td>
+                        <td>{{ letter_image.letter }}</td>
+                        <td>
+                            <img src="{{ letter_image.image.url }}" alt="{{ letter_image.letter }}" width="100">
+                        </td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="editImage({{ letter_image.id }}, '{{ letter_image.letter|escapejs }}')">Edit</button>
+                            <a href="?delete={{ letter_image.id }}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this image?');">Delete</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function editImage(id, letter) {
+            document.getElementById('image_id').value = id;
+            document.getElementById('letter').value = letter;
+        }
+    </script>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

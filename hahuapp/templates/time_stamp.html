@@ -1,0 +1,211 @@
+{% extends "base.html" %} {% block content %}
+<div class="container text-center">
+  <h2 class="mb-4">Click when you hear the letter "{{ correct_letter }}"</h2>
+
+  <!-- Display the start button to begin the game -->
+  <div id="startBtnContainer" class="mb-4">
+    <button id="startBtn" class="btn btn-primary" onclick="startGame()">
+      Start Game
+    </button>
+  </div>
+
+  <!-- Display the audio button (1 button for the correct letter) -->
+  <div
+    id="audio-buttons"
+    class="d-flex justify-content-center mb-4"
+    style="display: none"
+  >
+    <button
+      id="listenButton"
+      class="btn m-2"
+      onclick="checkAnswer()"
+      style="background: linear-gradient(to bottom, #ffefd5, #ffe4b5)"
+      disabled
+    >
+      Click when you hear the letter
+    </button>
+  </div>
+
+  <!-- Replay button to replay the audio -->
+  <div
+    id="replay-container"
+    class="d-flex justify-content-center mb-4"
+    style="display: none"
+  >
+    <button
+      id="replayBtn"
+      class="btn btn-secondary m-2"
+      onclick="replayAudio()"
+    >
+      Replay Full Audio Playlist
+    </button>
+  </div>
+
+  <!-- Audio player -->
+  <audio id="audioPlayer" controls preload="none" style="display: none"></audio>
+
+  <!-- Feedback message -->
+  <div id="feedback" class="mt-3"></div>
+
+  <!-- Continue button to proceed (hidden initially) -->
+  <a
+    href="{% url 'time-stamp' %}"
+    id="continue-btn"
+    class="btn btn-success mt-3 d-none"
+    >Continue</a
+  >
+</div>
+
+<!-- for the point system -->
+<form id="award-points-form" method="POST" style="display: none">
+  {% csrf_token %}
+</form>
+
+<script>
+  // Set up the sequence of audio files and other variables
+  const audioSequence = {{ audio_sequence|safe }};  // Ensure this is passed as a JSON object
+  let currentAudioIndex = 0;
+  const audioPlayer = document.getElementById('audioPlayer');
+  const listenButton = document.getElementById('listenButton');
+  const feedback = document.getElementById('feedback');
+  const continueBtn = document.getElementById('continue-btn');
+  const startBtn = document.getElementById('startBtn');
+  const startBtnContainer = document.getElementById('startBtnContainer');
+  const replayContainer = document.getElementById('replay-container');
+  const replayBtn = document.getElementById('replayBtn');
+  let isCorrectLetterPlayed = false;  // To track if the correct letter is played
+  let isGameStarted = false;  // To track if the game has started
+  let correctAnswerClicked = false;  // Track if the student clicked the correct button
+
+  let no_incorrect = 0;
+
+  // Function to start the game when the user clicks the start button
+  function startGame() {
+    // Hide the start button container
+    startBtnContainer.style.display = 'none';
+
+    // Show the audio buttons after the game starts
+    document.getElementById('audio-buttons').style.display = 'block';
+
+    // Enable the button to listen for the audio
+    listenButton.disabled = false;
+
+    // Start playing the first audio
+    playNextAudio();
+    isGameStarted = true;
+  }
+
+  // Function to play the next audio in the sequence
+  function playNextAudio() {
+    if (currentAudioIndex < audioSequence.length) {
+      const audio = audioSequence[currentAudioIndex];
+      audioPlayer.src = audio.audio_file;  // Use the URL from your Django model
+      audioPlayer.play();
+      currentAudioIndex++;
+      isCorrectLetterPlayed = (audio.letter === '{{ correct_letter }}');  // Check if the correct letter was played
+    } else {
+      // End of sequence, show replay option
+      replayContainer.style.display = 'block';
+    }
+  }
+
+  // for the point award system
+  function getCSRFTokenFromForm() {
+    const form = document.getElementById('award-points-form');
+    const csrfToken = form.querySelector('[name="csrfmiddlewaretoken"]').value;
+    return csrfToken;
+  }
+
+  function awardPoints(points, reason) {
+    const csrfToken = getCSRFTokenFromForm(); // Get CSRF token from hidden form
+
+    if (csrfToken) {
+      fetch("{% url 'award-points' %}", {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": csrfToken, // Include the CSRF token in the request headers
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          points: points,
+          reason: reason
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.message) {
+            console.log(data.message); // Optional feedback for debugging
+          }
+        })
+        .catch((error) => {
+          console.error("Error awarding points:", error);
+        });
+    } else {
+      console.error("CSRF token not found in the form");
+    }
+  }
+  // for the point system
+
+  // Function to check if the clicked letter is correct
+  function checkAnswer() {
+    if (isCorrectLetterPlayed) {
+      feedback.textContent = "Correct! Well done!";
+      feedback.className = 'alert alert-success';
+      correctAnswerClicked = true;
+      listenButton.disabled = true;
+      replayBtn.style.display = "none";
+
+      awardPoints(25, "Time Stamp Game Win");
+    } else {
+      feedback.textContent = "Oops! Try again.";
+      feedback.className = 'alert alert-danger';
+      
+      no_incorrect += 1;
+      if (no_incorrect > 2){
+        awardPoints(-5, "Find Family Game Incorrect Answer");
+      }
+    }
+
+    replayContainer.style.display = 'block';
+
+    // Check if game is completed successfully to show the Continue button
+    if (correctAnswerClicked) {
+      continueBtn.classList.remove('d-none');
+    }
+
+    // Continue playing the next audio in sequence
+    playNextAudio();
+  }
+
+  // Function to replay the full audio playlist from the beginning
+  function replayAudio() {
+    // Reset the audio player and current audio index
+    currentAudioIndex = 0;
+    feedback.textContent = '';
+    correctAnswerClicked = false; // Reset correct answer tracking
+    continueBtn.classList.add('d-none'); // Hide continue button while replaying
+
+    // Play the entire sequence of audio files from the beginning
+    playNextAudio();
+  }
+
+  // Listen for the audio to finish and play the next one
+  audioPlayer.addEventListener('ended', playNextAudio);
+</script>
+
+<style>
+  .alert {
+    font-size: 1.2em;
+  }
+
+  .btn {
+    font-size: 1.2em;
+    padding: 10px 20px;
+  }
+
+  #replay-container {
+    display: none;
+  }
+</style>
+
+{% endblock %}

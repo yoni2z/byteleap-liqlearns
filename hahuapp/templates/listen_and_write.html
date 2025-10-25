@@ -1,0 +1,100 @@
+{% extends "base.html" %} {% block content %}
+<div class="d-flex justify-content-center">
+  <div class="text-center">
+    <h2>Listen and Write Game</h2>
+    <p>Listen to the letter sound and write it down:</p>
+
+    <!-- Audio Player -->
+    <audio id="letter-audio" controls class="my-3">
+      <source src="{{ letter_sound.sound_field.url }}" type="audio/mp3" />
+      Your browser does not support the audio element.
+    </audio>
+
+    <!-- User Input -->
+    <textarea
+      id="user-input"
+      class="form-control mb-2"
+      rows="2"
+      placeholder="Type the letter you hear"
+    ></textarea>
+
+    <button
+      id="submit-button"
+      class="btn mt-2"
+      onclick="checkAnswer()"
+      style="background: linear-gradient(to bottom, #ffefd5, #ffe4b5)"
+    >
+      Submit
+    </button>
+    <a
+      href="{% url 'audio-recognition' %}"
+      id="continue-button"
+      class="btn btn-success mt-2"
+      style="display: none"
+      onclick="continueGame()"
+    >
+      Continue
+    </a>
+    <button
+      id="try-again-button"
+      class="btn btn-warning mt-2"
+      style="display: none"
+      onclick="tryAgain()"
+    >
+      Try Again
+    </button>
+
+    <p id="feedback" class="mt-3"></p>
+  </div>
+</div>
+
+<script>
+  let attemptsLeft = 3; // Track attempts
+
+  function checkAnswer() {
+    const userInput = document.getElementById("user-input");
+    const submitButton = document.getElementById("submit-button");
+    const userGuess = userInput.value.trim().toLowerCase();
+    const correctAnswer = "{{ letter_sound.letter }}".toLowerCase();
+    const feedback = document.getElementById("feedback");
+    const continueButton = document.getElementById("continue-button");
+    const tryAgainButton = document.getElementById("try-again-button");
+
+    // Clear previous highlights
+    userInput.classList.remove("is-invalid", "is-valid");
+
+    if (userGuess === correctAnswer) {
+      feedback.textContent = "Correct! 🎉";
+      feedback.style.color = "green";
+      continueButton.style.display = "block";
+      userInput.classList.add("is-valid"); // Success highlight
+      userInput.disabled = true; // Disable input on correct answer
+      submitButton.disabled = true;
+    } else {
+      attemptsLeft--; // Decrease attempts
+
+      if (attemptsLeft > 0) {
+        feedback.textContent = `Incorrect! You have ${attemptsLeft} tries left.`;
+        feedback.style.color = "red";
+        userInput.classList.add("is-invalid"); // Error highlight
+      } else {
+        feedback.textContent = `Incorrect! The correct letter is "${correctAnswer}".`;
+        feedback.style.color = "red";
+        userInput.classList.add("is-invalid"); // Error highlight
+        submitButton.disabled = true; // Disable submit button
+        userInput.disabled = true; // Disable input
+        tryAgainButton.style.display = "block"; // Show Try Again button
+      }
+    }
+  }
+
+  function continueGame() {
+    resetGameState();
+    // Optionally trigger new sound logic here
+  }
+
+  function tryAgain() {
+    location.reload(); // Reload the page to start fresh
+  }
+</script>
+{% endblock %}

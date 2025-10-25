@@ -1,0 +1,137 @@
+{% extends "base.html" %} {% block content %}
+
+<div class="container text-center">
+  <h2 class="mb-4">Arrange the Family Members of "{{ letter }}" in Order</h2>
+
+  <!-- Options: Draggable letters (shuffled) -->
+  <div id="options" class="d-flex flex-wrap justify-content-center mb-4">
+    {% for option in options %}
+    <div class="draggable-letter" draggable="true" data-letter="{{ option }}">
+      {{ option }}
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Dropzone: Where students arrange family members in order -->
+  <h5>Drag and drop the family members below in the correct order:</h5>
+  <div id="dropzone" class="dropzone d-flex justify-content-center align-items-center"></div>
+
+  <!-- Submit button to check answer -->
+  <button id="submit-btn" class="btn btn-success my-3">Check Order</button>
+  <a
+    href="{% url 'arrange-family'%}"
+    id="continue-btn"
+    class="btn btn-primary my-3 d-none"
+  >
+    Continue
+  </a>
+
+  <!-- Feedback message -->
+  <div id="feedback" class="mt-3"></div>
+</div>
+
+<script>
+  const correctFamily = {{ correct_family|safe }};
+  let draggedItem = null;
+
+  // Enable drag-and-drop functionality for options
+  const draggableLetters = document.querySelectorAll('.draggable-letter');
+  const dropzone = document.getElementById('dropzone');
+  const feedback = document.getElementById('feedback');
+  const continueBtn = document.getElementById('continue-btn');
+  const optionsContainer = document.getElementById('options'); // Reference to options container
+
+  draggableLetters.forEach(letter => {
+      letter.addEventListener('dragstart', () => {
+          draggedItem = letter;
+          setTimeout(() => letter.classList.add('hidden'), 0);
+      });
+
+      letter.addEventListener('dragend', () => {
+          setTimeout(() => letter.classList.remove('hidden'), 0);
+          draggedItem = null;
+      });
+  });
+
+  dropzone.addEventListener('dragover', e => {
+      e.preventDefault();
+  });
+
+  dropzone.addEventListener('drop', e => {
+      e.preventDefault();
+      if (draggedItem) {
+          dropzone.appendChild(draggedItem);
+          addRemoveOnClick(draggedItem); // Add click-to-remove functionality
+      }
+  });
+
+  // Function to add click-to-remove functionality on letters in dropzone
+  function addRemoveOnClick(letterElement) {
+      letterElement.addEventListener('click', () => {
+          optionsContainer.appendChild(letterElement); // Move letter back to options
+      });
+  }
+
+  // Function to check the answer when the submit button is clicked
+  document.getElementById('submit-btn').addEventListener('click', () => {
+      const selectedOrder = Array.from(dropzone.children).map(item => item.dataset.letter.trim());
+
+      if (JSON.stringify(selectedOrder) === JSON.stringify(correctFamily)) {
+          feedback.textContent = 'Correct! You arranged the family members properly.';
+          feedback.className = 'alert alert-success';
+          continueBtn.classList.remove('d-none');
+          disableGame();
+      } else {
+          feedback.textContent = 'Incorrect. Try again!';
+          feedback.className = 'alert alert-danger';
+          highlightIncorrectOrder();
+      }
+  });
+
+  function disableGame() {
+      document.getElementById('submit-btn').disabled = true;
+      draggableLetters.forEach(letter => letter.setAttribute('draggable', 'false'));
+  }
+
+  function highlightIncorrectOrder() {
+      dropzone.classList.add('incorrect-order');
+      setTimeout(() => dropzone.classList.remove('incorrect-order'), 1000);
+  }
+</script>
+
+<style>
+  .draggable-letter {
+    padding: 10px;
+    margin: 5px;
+    background-color: #f0f0f0;
+    cursor: move;
+    border-radius: 5px;
+  }
+
+  .dropzone {
+    min-height: 100px;
+    padding: 10px;
+    background-color: #e9ecef;
+    border: 2px dashed #6c757d;
+    border-radius: 5px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+  }
+
+  .alert {
+    font-size: 1.2em;
+  }
+
+  .hidden {
+    display: none;
+  }
+
+  .incorrect-order {
+    border-color: red;
+    background-color: #f8d7da;
+  }
+</style>
+
+{% endblock %}

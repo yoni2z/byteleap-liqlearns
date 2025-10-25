@@ -1,0 +1,58 @@
+{% extends 'base.html' %} {% block content %}
+<h2 class="text-center mb-4">Payment Details</h2>
+
+{% if level_name and price %}
+<div class="alert alert-info">
+  <h4>You have selected the <strong>{{ level_name }}</strong> plan!</h4>
+  <p>Total Amount: <strong>${{ price }}</strong></p>
+</div>
+{% else %}
+<div class="alert alert-warning">
+  <h4>No plan selected!</h4>
+  <p>Please go back and select a plan.</p>
+</div>
+{% endif %}
+<form id="payment-form">
+  <button id="submit">Checkout</button>
+</form>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+  var stripe = Stripe("{{ STRIPE_PUBLISHABLE_KEY }}");
+
+  document
+    .getElementById("payment-form")
+    .addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      var levelId = "{{ level_id }}";
+
+      fetch("{% url 'payment_page' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-CSRFToken": "{{ csrf_token }}",
+        },
+        body: new URLSearchParams({
+          level_id: levelId, // Send level_id dynamically
+        }),
+      })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (session) {
+          if (session.error) {
+            console.error(session.error);
+          } else {
+            return stripe.redirectToCheckout({ sessionId: session.id });
+          }
+        })
+        .then(function (result) {
+          if (result.error) {
+            console.error(result.error.message);
+          }
+        });
+    });
+</script>
+
+{% endblock %}

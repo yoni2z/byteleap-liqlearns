@@ -1,0 +1,70 @@
+<!-- templates/word_copy_game.html -->
+{% extends 'base.html' %} {% block content %}
+<div class="container mt-5 mb-5">
+  <section class="my-5">
+    <h1 class="text-center mb-4">Word Copy Challenge</h1>
+    <p class="text-center mb-5">
+      Type the following word exactly as it appears:
+    </p>
+
+    <div class="text-center mb-4">
+      <h2 id="word-display" class="display-4">{{ word.word }}</h2>
+    </div>
+
+    <div class="input-group mb-4 justify-content-center">
+      <input type="hidden" id="word-id" value="{{ word.id }}" />
+      <input
+        type="text"
+        id="user-input"
+        class="form-control w-50 text-center"
+        placeholder="Type the word here"
+        aria-label="User input"
+      />
+    </div>
+
+    <div class="text-center mb-5">
+      <button
+        class="btn"
+        style="background: linear-gradient(to bottom, #ffefd5, #ffe4b5)"
+        onclick="checkAnswer()"
+      >
+        Submit
+      </button>
+    </div>
+
+    <p id="feedback" class="text-center fw-bold"></p>
+  </section>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  function checkAnswer() {
+    const userInput = document.getElementById("user-input").value;
+    const wordId = document.getElementById("word-id").value;
+
+    $.ajax({
+      url: "{% url 'word-copy-game' %}",
+      type: "POST",
+      data: {
+        user_input: userInput,
+        word_id: wordId,
+        csrfmiddlewaretoken: "{{ csrf_token }}",
+      },
+      success: function (response) {
+        const feedbackElement = document.getElementById("feedback");
+        feedbackElement.textContent = response.message;
+
+        if (response.message === "Correct!") {
+          document.getElementById("word-display").textContent =
+            response.new_word;
+          document.getElementById("word-id").value = response.new_word_id;
+          document.getElementById("user-input").value = "";
+          feedbackElement.className = "text-success";
+        } else {
+          feedbackElement.className = "text-danger";
+        }
+      },
+    });
+  }
+</script>
+{% endblock %}

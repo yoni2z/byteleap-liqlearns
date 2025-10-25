@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .puzzle-container {
+        margin-top: 20px;
+        width: 600px;
+        border: 2px solid #ccc;
+        padding: 20px;
+        border-radius: 5px;
+        background-color: #fff;
+        text-align: center;
+    }
+
+    .letter {
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        margin: 5px;
+        background-color: #ffcc00;
+        border-radius: 5px;
+        line-height: 40px;
+        font-size: 24px;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .blank {
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        border-bottom: 2px dashed #000;
+        margin: 5px;
+        line-height: 40px;
+    }
+
+    #message {
+        margin-top: 20px;
+        font-size: 20px;
+        color: green;
+    }
+</style>
+
+<div class="puzzle-container">
+    <div id="sentence-container"></div>
+    <div id="letters"></div>
+    <div id="message"></div>
+</div>
+
+<script>
+    const sentence = "I love to eat _ _ _ _."; // Sentence with blanks
+    const correctAnswer = ["A", "P", "P", "L", "E"]; // Correct letters
+    const letters = ['A', 'P', 'L', 'E', 'B', 'C', 'D']; // Available letters
+    const messageDisplay = document.getElementById('message');
+    let blanks = [];
+
+    // Create the sentence with blanks
+    function createSentence() {
+        const sentenceContainer = document.getElementById('sentence-container');
+        const sentenceParts = sentence.split(' ');
+        sentenceParts.forEach(part => {
+            const span = document.createElement('span');
+            if (part === "_ _ _ _") {
+                const blank = document.createElement('span');
+                blank.className = 'blank'; // Blank space
+                blanks.push(blank); // Store the blank for later use
+                span.appendChild(blank);
+            } else {
+                span.textContent = part; // Display text
+            }
+            sentenceContainer.appendChild(span);
+        });
+    }
+
+    // Create the draggable letters
+    function createLetters() {
+        const lettersContainer = document.getElementById('letters');
+        lettersContainer.innerHTML = ""; 
+
+        letters.forEach(letter => {
+            const letterDiv = document.createElement('div');
+            letterDiv.className = 'letter';
+            letterDiv.textContent = letter;
+            letterDiv.setAttribute('draggable', true);
+            letterDiv.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', letter);
+            });
+            lettersContainer.appendChild(letterDiv);
+        });
+    }
+
+    // Handle drop events for blanks
+    function setupBlankEvents() {
+        blanks.forEach(blank => {
+            blank.addEventListener('dragover', (e) => {
+                e.preventDefault(); // Allow drop
+            });
+
+            blank.addEventListener('drop', (e) => {
+                e.preventDefault(); // Prevent default behavior
+                const letter = e.dataTransfer.getData('text/plain');
+                if (letter) {
+                    blank.textContent = letter; // Fill blank
+                    blank.classList.remove('blank'); // Remove blank class
+                    checkCompletion(); // Check if completed
+                }
+            });
+        });
+    }
+
+    // Check if the puzzle is completed
+    function checkCompletion() {
+        const filledBlanks = blanks.map(blank => blank.textContent);
+        if (JSON.stringify(filledBlanks) === JSON.stringify(correctAnswer)) {
+            messageDisplay.textContent = "Congratulations! You completed the puzzle!";
+        } else {
+            messageDisplay.textContent = ""; // Clear message if not complete
+        }
+    }
+
+    // Initialize the puzzle
+    createSentence();
+    createLetters();
+    setupBlankEvents(); // Setup events after blanks are created
+</script>
+{% endblock %}

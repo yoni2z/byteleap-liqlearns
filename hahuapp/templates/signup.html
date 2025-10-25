@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Signup - E-Learning Platform</title>
+    <style>
+      body {
+        font-family: "Comic Sans MS", "Chalkboard SE", sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(to bottom, #ffefd5, #ffe4b5);
+        color: #333;
+      }
+      .container {
+        max-width: 450px;
+        margin: 60px auto;
+        padding: 30px;
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      }
+      .container h2 {
+        text-align: center;
+        color: #2c3e50;
+        font-size: 24px;
+        font-weight: 600;
+      }
+      .form-group {
+        margin-bottom: 20px;
+      }
+      .form-group label {
+        display: block;
+        font-size: 14px;
+        margin-bottom: 5px;
+      }
+      .form-group input {
+        width: 100%;
+        padding: 12px;
+        font-size: 1em;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        box-sizing: border-box;
+      }
+      .form-group input:focus {
+        border-color: #2980b9;
+        outline: none;
+      }
+      .form-group .error {
+        color: red;
+        font-size: 12px;
+        margin-top: 5px;
+      }
+      button {
+        padding: 12px;
+        font-size: 1em;
+        background: linear-gradient(to bottom, #ffefd5, #ffe4b5);
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        font-weight: 500;
+        width: 100%;
+      }
+      button:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transform: translateY(-2px);
+      }
+      .redirect-links {
+        text-align: center;
+        margin-top: 25px;
+        font-size: 14px;
+      }
+      .redirect-links a {
+        color: #2980b9;
+        text-decoration: none;
+        font-weight: 500;
+      }
+      .redirect-links p {
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Create an Account</h2>
+      <form method="POST" style="display: flex; flex-direction: column">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="id_full_name">Full Name:</label>
+          {{ form.full_name }} {% if form.full_name.errors %}
+          <div class="error">
+            {% for error in form.full_name.errors %}
+            <p>{{ error }}</p>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="id_username">Username:</label>
+          {{ form.username }} {% if form.username.errors %}
+          <div class="error">
+            {% for error in form.username.errors %}
+            <p>{{ error }}</p>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="id_email">Email:</label>
+          {{ form.email }} {% if form.email.errors %}
+          <div class="error">
+            {% for error in form.email.errors %}
+            <p>{{ error }}</p>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="id_password1">Password:</label>
+          {{ form.password1 }} {% if form.password1.errors %}
+          <div class="error">
+            {% for error in form.password1.errors %}
+            <p>{{ error }}</p>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="id_password2">Password Confirmation:</label>
+          {{ form.password2 }} {% if form.password2.errors %}
+          <div class="error">
+            {% for error in form.password2.errors %}
+            <p>{{ error }}</p>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="id_referral_code">Referral Code (Optional):</label>
+          {{ form.referral_code }}
+        </div>
+
+        <button type="submit">Register</button>
+      </form>
+
+      <div class="redirect-links">
+        <p>
+          Already have an account? <a href="{% url 'login' %}">Login here</a>
+        </p>
+        <p>
+          Or sign up using:
+          <a
+            href="{% url 'social:begin' 'google-oauth2' %}?next={{ request.path }}"
+            >Google</a
+          >
+        </p>
+      </div>
+    </div>
+
+    <script>
+      const registerButton = document.querySelector('button[type="submit"]');
+      registerButton.addEventListener("mouseover", () => {
+        registerButton.style.backgroundColor = "#1d6fa5";
+      });
+      registerButton.addEventListener("mouseout", () => {
+        registerButton.style.backgroundColor = "#2980b9";
+      });
+      registerButton.addEventListener("mousedown", () => {
+        registerButton.style.backgroundColor = "#1a5276";
+      });
+      registerButton.addEventListener("mouseup", () => {
+        registerButton.style.backgroundColor = "#1d6fa5";
+      });
+    </script>
+  </body>
+</html>

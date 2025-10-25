@@ -1,0 +1,199 @@
+{% extends "base.html" %} {% block content %}
+
+<div class="container text-center">
+  <h2 class="mb-4">Word Sound Sequencing Game</h2>
+
+  <button class="btn btn-primary mb-3" onclick="playAudioSequence()">
+    Play Audio
+  </button>
+
+  <div id="word-list" class="d-flex flex-column mb-4">
+    {% for word in shuffled_words %}
+    <div class="draggable" draggable="true" data-word="{{ word.word }}">
+      {{ word.word }}
+    </div>
+    {% endfor %}
+  </div>
+
+  <h5>
+    Arrange the words in the correct order as they are called in the audio:
+  </h5>
+  <div id="dropzone" class="dropzone"></div>
+
+  <button id="submit-btn" class="btn btn-success mt-3" onclick="checkOrder()">
+    Submit
+  </button>
+  <button
+    id="try-again-btn"
+    class="btn btn-warning mt-3 d-none"
+    onclick="resetGame()"
+  >
+    Try Again
+  </button>
+  <a
+  href="{% url 'listen-and-identify' %}"
+    id="continue-btn"
+    class="btn btn-primary mt-3 d-none"
+  >
+    Continue
+</a>
+
+  <div id="feedback" class="mt-3"></div>
+
+  {% for audio in audios %}
+  <audio
+    id="audio-{{ forloop.counter }}"
+    src="{{ audio.audio_file.url }}"
+  ></audio>
+  {% endfor %}
+</div>
+
+<script>
+  const draggables = document.querySelectorAll('.draggable');
+  const dropzone = document.getElementById('dropzone');
+  const submitBtn = document.getElementById('submit-btn');
+  const tryAgainBtn = document.getElementById('try-again-btn');
+  const continueBtn = document.getElementById('continue-btn');
+  const feedback = document.getElementById('feedback');
+
+  let draggedItem = null;
+
+  // Enable drag-and-drop functionality
+  draggables.forEach(draggable => {
+    draggable.addEventListener('dragstart', () => {
+      draggedItem = draggable;
+      setTimeout(() => draggable.classList.add('hidden'), 0); // Hide during drag
+    });
+
+    draggable.addEventListener('dragend', () => {
+      setTimeout(() => draggable.classList.remove('hidden'), 0); // Show after drop
+      draggedItem = null;
+    });
+  });
+
+  dropzone.addEventListener('dragover', e => {
+    e.preventDefault(); // Allow drop
+    const afterElement = getDragAfterElement(dropzone, e.clientY);
+    if (afterElement == null) {
+      dropzone.appendChild(draggedItem);
+    } else {
+      dropzone.insertBefore(draggedItem, afterElement);
+    }
+  });
+
+  function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.draggable:not(.hidden)')];
+    return draggableElements.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) {
+        return { offset: offset, element: child };
+      } else {
+        return closest;
+      }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+  }
+
+  function playAudioSequence() {
+    const audios = [
+      {% for i in audios %}
+        document.getElementById('audio-{{ forloop.counter }}'),
+      {% endfor %}
+    ];
+
+    let index = 0;
+    function playNext() {
+      if (index < audios.length) {
+        audios[index].play();
+        audios[index].onended = playNext;
+        index++;
+      }
+    }
+    playNext();
+  }
+
+  function checkOrder() {
+    const arrangedWords = Array.from(dropzone.children).map(el => el.dataset.word);
+    const correctOrder = [
+      {% for audio in audios %}
+        "{{ audio.word }}",
+      {% endfor %}
+    ];
+
+    // Highlight words based on correctness
+    dropzone.childNodes.forEach((child, index) => {
+      if (child.dataset.word === correctOrder[index]) {
+        child.classList.add('correct');
+      } else {
+        child.classList.add('incorrect');
+      }
+    });
+
+    if (JSON.stringify(arrangedWords) === JSON.stringify(correctOrder)) {
+      feedback.textContent = 'Correct! Well done.';
+      feedback.className = 'alert alert-success';
+      continueBtn.classList.remove('d-none');
+    } else {
+      feedback.textContent = 'Incorrect. Try again!';
+      feedback.className = 'alert alert-danger';
+      tryAgainBtn.classList.remove('d-none');
+    }
+
+    disableGame(); // Disable submit button and drag-and-drop
+  }
+
+  function disableGame() {
+    submitBtn.disabled = true;
+    draggables.forEach(draggable => draggable.setAttribute('draggable', 'false'));
+  }
+
+  function resetGame() {
+    feedback.textContent = '';
+    feedback.className = '';
+    dropzone.innerHTML = ''; // Clear the drop zone
+    tryAgainBtn.classList.add('d-none');
+    submitBtn.disabled = false;
+    draggables.forEach(draggable => {
+      draggable.setAttribute('draggable', 'true');
+      draggable.classList.remove('correct', 'incorrect'); // Reset colors
+    });
+    const wordList = document.getElementById('word-list');
+    draggables.forEach(draggable => wordList.appendChild(draggable));
+  }
+</script>
+
+<style>
+  .draggable {
+    padding: 10px;
+    margin: 5px;
+    background-color: #f0f0f0;
+    cursor: move;
+    border-radius: 5px;
+  }
+
+  .dropzone {
+    min-height: 50px;
+    padding: 10px;
+    background-color: #e9ecef;
+    border: 2px dashed #6c757d;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .drag-over {
+    border-color: #007bff;
+  }
+
+  .correct {
+    background-color: #c3e6cb;
+  }
+
+  .incorrect {
+    background-color: #f5c6cb;
+  }
+</style>
+
+{% endblock %}

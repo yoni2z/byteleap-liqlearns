@@ -1,0 +1,101 @@
+{% extends "base.html" %} {% block content %}
+<div
+  class="container d-flex flex-column justify-content-center align-items-center text-center"
+>
+  <h1 class="fw-bold">Find the Word</h1>
+  <p>Unscramble the letters and find the word: <strong>{{ scrambled_word }}</strong></p>
+
+  <!-- ContentEditable Div for User Guess -->
+  <div
+    id="guess-input"
+    class="editable-input"
+    contenteditable="true"
+    placeholder="Type the correct word"
+  ></div>
+
+  <!-- Submit Button -->
+  <button onclick="checkAnswer()">Submit</button>
+
+  <!-- Feedback Section -->
+  <p id="feedback"></p>
+
+  <!-- Continue Button (Initially Hidden) -->
+  <a
+    href="{% url 'word-dictation' %}"
+    id="continue-btn"
+    class="btn btn-primary mt-3"
+    style="display: none"
+  >
+    Continue
+  </a>
+</div>
+
+<script>
+  const correctWord = "{{ correct_word }}";
+
+  function checkAnswer() {
+    const inputDiv = document.getElementById("guess-input");
+    const userGuess = inputDiv.textContent.trim(); // Get user input
+    const feedback = document.getElementById("feedback");
+    const continueBtn = document.getElementById("continue-btn");
+
+    // Clear content to re-render with highlighting
+    inputDiv.innerHTML = "";
+
+    // Highlight letters based on correctness
+    for (let i = 0; i < correctWord.length; i++) {
+      const charSpan = document.createElement("span");
+      charSpan.textContent = userGuess[i] || ""; // Handle cases where user input is shorter
+
+      if (charSpan.textContent === correctWord[i]) {
+        charSpan.style.color = "green"; // Correct letter in correct position
+      } else if (userGuess.includes(correctWord[i])) {
+        charSpan.style.color = "red"; // Correct letter but in wrong position
+      } else {
+        charSpan.style.color = "black"; // Letter not in the correct answer
+      }
+
+      inputDiv.appendChild(charSpan);
+    }
+
+    // Provide overall feedback
+    if (
+      userGuess.length === correctWord.length &&
+      userGuess === correctWord
+    ) {
+      feedback.textContent = "Correct Word found! 🎉";
+      feedback.style.color = "green";
+      inputDiv.style.borderColor = "green";
+      inputDiv.setAttribute("contenteditable", "false"); // Disable editing
+      continueBtn.style.display = "inline-block"; // Show continue button
+    } else {
+      feedback.textContent = "Incorrect order! Keep trying.";
+      feedback.style.color = "red";
+      inputDiv.style.borderColor = "red";
+    }
+  }
+</script>
+
+<style>
+  .editable-input {
+    margin: 10px 0;
+    padding: 10px;
+    width: 80%;
+    min-height: 40px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    white-space: nowrap;
+    overflow-x: auto;
+  }
+
+  .editable-input:empty::before {
+    content: attr(placeholder);
+    color: #999;
+  }
+
+  #feedback {
+    margin-top: 10px;
+    font-size: 18px;
+  }
+</style>
+{% endblock %}

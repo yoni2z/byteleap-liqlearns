@@ -1,0 +1,176 @@
+{% extends 'base.html' %} {% block content %}
+<style>
+  #tracing-board-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    padding: 20px;
+  }
+
+  #tracing-board {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    aspect-ratio: 3 / 2; /* Maintain a 3:2 aspect ratio */
+    border: 2px solid #ccc;
+    overflow: hidden;
+    background-color: #fafafa;
+  }
+
+  .letter {
+    font-size: 15vw; /* Adjust size relative to viewport width */
+    position: absolute;
+    text-align: center;
+    color: rgba(0, 0, 0, 0.1); /* Light color for the letter */
+    user-select: none; /* Prevent text selection */
+    top: 50%; /* Center vertically */
+    left: 50%; /* Center horizontally */
+    transform: translate(-50%, -50%); /* Adjust position to center */
+  }
+
+  .tracing-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+  }
+
+  .controls {
+    margin-top: 20px;
+  }
+
+  .controls button {
+    padding: 10px 15px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-right: 10px; /* Space between buttons */
+  }
+</style>
+
+<h2 style="text-align: center; margin-bottom: 20px">Letter Tracing Board</h2>
+<div id="tracing-board-container">
+  <div id="tracing-board">
+    <canvas id="tracing-canvas" class="tracing-canvas"></canvas>
+    <div class="letter" id="letter">{{ letter }}</div>
+    <!-- Dynamic letter -->
+  </div>
+</div>
+
+<div class="controls text-center">
+  <button
+    id="refresh-btn"
+    style="background: linear-gradient(to bottom, #ffefd5, #ffe4b5)"
+  >
+    Refresh Letter
+  </button>
+  <button
+    id="undo-btn"
+    style="background: linear-gradient(to bottom, #ffefd5, #ffe4b5)"
+  >
+    Undo
+  </button>
+</div>
+
+<script>
+  const canvas = document.getElementById("tracing-canvas");
+  const ctx = canvas.getContext("2d");
+  const tracingBoard = document.getElementById("tracing-board");
+  let drawing = false;
+  let paths = []; // Array to store paths for undo functionality
+  let currentPath = []; // Array to store current drawing path
+
+  function resizeCanvas() {
+    canvas.width = tracingBoard.clientWidth;
+    canvas.height = tracingBoard.clientHeight;
+    redrawCanvas(); // Redraw paths after resizing
+  }
+
+  window.addEventListener("resize", resizeCanvas);
+  resizeCanvas(); // Initial resize
+
+  canvas.addEventListener("mousedown", startDrawing);
+  canvas.addEventListener("mouseup", stopDrawing);
+  canvas.addEventListener("mousemove", draw);
+
+  // Add touch event listeners for mobile
+  canvas.addEventListener("touchstart", (e) => {
+    e.preventDefault(); // Prevent scrolling
+    startDrawing(e.touches[0]);
+  });
+  canvas.addEventListener("touchend", (e) => {
+    e.preventDefault(); // Prevent scrolling
+    stopDrawing(e.touches[0]);
+  });
+  canvas.addEventListener("touchmove", (e) => {
+    e.preventDefault(); // Prevent scrolling
+    draw(e.touches[0]);
+  });
+
+  function startDrawing(event) {
+    drawing = true;
+    currentPath = []; // Start a new path
+    ctx.beginPath();
+    const position = getPosition(event);
+    ctx.moveTo(position.x, position.y);
+  }
+
+  function stopDrawing(event) {
+    drawing = false;
+    ctx.closePath();
+    if (currentPath.length > 0) {
+      paths.push(currentPath); // Save the current path
+    }
+  }
+
+  function draw(event) {
+    if (!drawing) return;
+
+    ctx.lineWidth = 5; // Thickness of the tracing line
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "red"; // Color of the tracing line
+    const position = getPosition(event);
+    ctx.lineTo(position.x, position.y);
+    ctx.stroke();
+    currentPath.push(position); // Store the path points
+    ctx.beginPath();
+    ctx.moveTo(position.x, position.y);
+  }
+
+  // Function to get the position of the mouse or touch relative to the canvas
+  function getPosition(event) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    };
+  }
+
+  // Refresh button functionality
+  document.getElementById("refresh-btn").addEventListener("click", function () {
+    location.reload(); // Reloads the page to get a new letter
+  });
+
+  // Undo button functionality
+  document.getElementById("undo-btn").addEventListener("click", function () {
+    if (paths.length > 0) {
+      paths.pop(); // Remove the last path
+      redrawCanvas(); // Redraw the canvas without the last path
+    }
+  });
+
+  // Function to redraw the canvas
+  function redrawCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+    paths.forEach((path) => {
+      ctx.beginPath();
+      path.forEach((point) => {
+        ctx.lineTo(point.x, point.y);
+      });
+      ctx.stroke(); // Redraw each path
+    });
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container my-5">
+  <h2>Descriptive Image Game</h2>
+  <div class="text-center">
+    <img
+      src="{{ question.image.url }}"
+      alt="Descriptive Image"
+      class="img-fluid my-4"
+      style="max-width: 400px"
+      id="question-image"
+    />
+    <input
+      type="text"
+      id="answer"
+      class="form-control my-3"
+      placeholder="Type a word that describes the image"
+    />
+
+    <!-- Flexbox container for buttons -->
+    <div class="d-flex justify-content-center">
+      <button
+        id="submit-answer"
+        class="btn me-2"
+        style="background: linear-gradient(to bottom, #ffefd5, #ffe4b5)"
+      >
+        Submit Answer
+      </button>
+      <button id="next-question" class="btn btn-secondary d-none">
+        Next Question
+      </button>
+    </div>
+
+    <p id="response-message" class="mt-3"></p>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+  $(document).ready(function () {
+    let questionId = "{{ question.id }}"; // Get current question ID
+
+    $("#submit-answer").on("click", function () {
+      let userAnswer = $("#answer").val().trim(); // Get user input answer
+
+      console.log(
+        "Submitting answer: ",
+        userAnswer,
+        " for question id: ",
+        questionId
+      ); // Debugging log
+
+      // Ensure an answer has been provided
+      if (userAnswer === "") {
+        alert("Please enter an answer.");
+        return;
+      }
+
+      // Send AJAX request
+      $.ajax({
+        url: "", // Current page URL
+        type: "POST",
+        data: {
+          answer: userAnswer,
+          question_id: questionId, // Send current question ID
+          csrfmiddlewaretoken: "{{ csrf_token }}",
+        },
+        success: function (response) {
+          console.log(response); // Log the server response for debugging
+
+          // Update response message based on answer
+          $("#response-message").text(response.message);
+
+          // Update the styling based on correct or incorrect answer
+          if (response.is_correct) {
+            $("#response-message")
+              .removeClass("text-danger")
+              .addClass("text-success");
+            $("#next-question").removeClass("d-none"); // Show next question button
+            $("#submit-answer").addClass("d-none"); // Hide submit button
+          } else {
+            $("#response-message")
+              .removeClass("text-success")
+              .addClass("text-danger");
+          }
+
+          if (response.new_question_image_url) {
+            // If correct, load new question image
+            $("#question-image").attr("src", response.new_question_image_url);
+            $("#answer").val(""); // Clear the input field
+            questionId = response.new_question_id; // Update the question ID for the next round
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error("AJAX error:", status, error); // Log AJAX errors
+          alert("There was an error processing your request.");
+        },
+      });
+    });
+
+    $("#next-question").on("click", function () {
+      location.reload(); // Reloads page for a new question
+    });
+  });
+</script>
+{% endblock %}

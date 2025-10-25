@@ -1,0 +1,61 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container text-center mt-5">
+  <h2>Word Charades</h2>
+  <video width="300" height="300" controls muted>
+    <source src="{{ video.video_file.url }}" type="video/mp4" />
+    Your browser does not support the video tag.
+  </video>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div>
+      <label for="recording">Record your answer:</label>
+      <input type="file" name="recording" accept="audio/*" required />
+    </div>
+    <button type="submit" class="btn btn-success mt-2">Submit Recording</button>
+  </form>
+
+  <div id="feedback" class="mt-3">{{ feedback }}</div>
+</div>
+
+<script>
+  let mediaRecorder;
+  let audioChunks = [];
+
+  const startRecording = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+
+    mediaRecorder.start();
+    mediaRecorder.ondataavailable = (event) => {
+      audioChunks.push(event.data);
+    };
+
+    mediaRecorder.onstop = () => {
+      const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+      const formData = new FormData();
+      formData.append("recording", audioBlob, "recording.wav");
+      fetch("", {
+        method: "POST",
+        body: formData,
+        headers: {
+          "X-CSRFToken": "{{ csrf_token }}", // Include CSRF token for security
+        },
+      }).then((response) => {
+        // Handle the response from the server
+        console.log(response);
+      });
+    };
+  };
+
+  const stopRecording = () => {
+    mediaRecorder.stop();
+    audioChunks = []; // Clear the audio chunks
+  };
+
+  // Attach these functions to buttons for starting and stopping the recording
+  document.getElementById("startButton").onclick = startRecording;
+  document.getElementById("stopButton").onclick = stopRecording;
+</script>
+
+{% endblock %}

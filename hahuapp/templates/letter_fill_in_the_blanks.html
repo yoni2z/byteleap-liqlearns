@@ -1,0 +1,106 @@
+{% extends "base.html" %} {% block content %}
+<div class="container mt-5">
+  <h2
+    class="text-center mb-4"
+    style="
+      font-family: 'Fredoka One', sans-serif;
+      font-size: 2.5rem;
+    "
+  >
+    Complete the Word
+  </h2>
+
+  <p
+    class="text-center display-4"
+    id="display-word"
+    style="font-weight: bold;"
+  >
+    {{ display_word }}
+  </p>
+
+  <div class="row justify-content-center mt-4">
+    {% for choice in choices %}
+    <div class="col-3 mb-3">
+      <button
+        class="btn btn-lg btn-outline-warning w-100 choice-btn"
+        data-letter="{{ choice }}"
+        style="
+          font-size: 1.5rem;
+          padding: 15px 20px;
+          border-radius: 12px;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          transition: all 0.3s ease;
+          border-color: #f39c12;
+          color: #f39c12;
+        "
+      >
+        {{ choice }}
+      </button>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="text-center mt-5">
+    <p id="feedback" class="h4" style="font-weight: bold"></p>
+    <p
+      id="word-meaning"
+      style="
+        display: none;
+        font-size: 1.2rem;
+        font-weight: bold;
+      "
+    >
+      Meaning of the word: <strong>{{ meaning }}</strong>
+    </p>
+    <a
+      href="{% url 'letter-sound-discrimination' %}"
+      id="continue-btn"
+      class="btn btn-lg btn-warning"
+      style="
+        display: none;
+        padding: 12px 25px;
+        font-size: 1.2rem;
+        border-radius: 15px;
+        background-color: #f39c12;
+        transition: background-color 0.3s ease;
+      "
+    >
+      Continue
+    </a>
+  </div>
+</div>
+
+<script>
+  const choiceButtons = document.querySelectorAll(".choice-btn");
+  const displayWord = document.getElementById("display-word");
+
+  choiceButtons.forEach((button) => {
+    button.addEventListener("click", function () {
+      const selectedLetter = this.getAttribute("data-letter");
+      const correctLetter = "{{ correct_letter }}";
+
+      if (selectedLetter === correctLetter) {
+        // Replace the displayed word with the correct word
+        displayWord.textContent = "{{ correct_word }}";
+
+        document.getElementById("feedback").textContent = "🎉 Correct! 🎉";
+        document.getElementById("word-meaning").style.display = "block";
+        document.getElementById("continue-btn").style.display = "block";
+        document.getElementById("feedback").classList.remove("text-danger");
+        document.getElementById("feedback").classList.add("text-success");
+
+        // Disable all buttons except the correct one
+        choiceButtons.forEach((btn) => {
+          if (btn.getAttribute("data-letter") !== correctLetter) {
+            btn.disabled = true;
+          }
+        });
+      } else {
+        document.getElementById("feedback").textContent = "❌ Try Again! ❌";
+        document.getElementById("feedback").classList.remove("text-success");
+        document.getElementById("feedback").classList.add("text-danger");
+      }
+    });
+  });
+</script>
+{% endblock %}

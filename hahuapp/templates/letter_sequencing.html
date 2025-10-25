@@ -1,0 +1,200 @@
+{% extends "base.html" %} {% block content %}
+<div class="container mt-4">
+  <h2
+    class="text-center text-primary mb-4"
+    style="font-family: 'Comic Sans MS', sans-serif; font-size: 2rem"
+  >
+    🌟 Arrange the Amharic Letters in Order 🌟
+  </h2>
+  <div id="letter-container" class="row d-flex justify-content-center mb-4">
+    {% for letter in selected_letters %}
+    <div class="col-2 mb-3 letter" draggable="true" data-letter="{{ letter }}">
+      <div
+        class="card"
+        id="letter-card"
+        style="
+          border-radius: 12px;
+          background-color: #ffeb3b;
+          transition: transform 0.3s ease;
+        "
+      >
+        <div class="card-body text-center" style="padding: 10px">
+          <h5
+            class="card-title letter-text"
+            style="font-size: 2rem; font-weight: bold"
+          >
+            {{ letter }}
+          </h5>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <button id="check-order" class="btn btn-primary mt-3 btn-lg check-btn">
+    🎯 Check My Order!
+  </button>
+  <a
+    href="{% url 'letter-fill-in-the-blanks' %}"
+    id="next-button"
+    class="btn btn-success mt-3 btn-lg next-btn"
+    style="display: none"
+    >🎉 Next Adventure</a
+  >
+
+  <div id="feedback" class="mt-3 text-center" style="font-size: 1.2rem"></div>
+
+  <script>
+    const correctOrder = {{ correct_order|safe }}; // Correctly parsed JSON
+
+    // Enable drag-and-drop functionality
+    const letterContainer = document.getElementById("letter-container");
+    const letters = document.querySelectorAll(".letter");
+
+    letters.forEach((letter) => {
+      letter.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("text/plain", letter.dataset.letter);
+        letter.style.opacity = "0.5"; // Add fade effect on drag
+      });
+
+      letter.addEventListener("dragend", () => {
+        letter.style.opacity = "1"; // Reset opacity after drag
+      });
+    });
+
+    letterContainer.addEventListener("dragover", (e) => {
+      e.preventDefault(); // Allow drop
+      e.target.classList.add("drag-over"); // Show hover effect
+    });
+
+    letterContainer.addEventListener("dragleave", (e) => {
+      e.target.classList.remove("drag-over");
+    });
+
+    letterContainer.addEventListener("drop", (e) => {
+      e.preventDefault();
+      const draggedLetter = e.dataTransfer.getData("text/plain");
+      const draggedElement = document.querySelector(`[data-letter="${draggedLetter}"]`);
+      const targetElement = e.target.closest(".letter");
+
+      if (targetElement && draggedElement !== targetElement) {
+        const allLetters = Array.from(letterContainer.children);
+        const draggedIndex = allLetters.indexOf(draggedElement);
+        const targetIndex = allLetters.indexOf(targetElement);
+
+        if (draggedIndex < targetIndex) {
+          letterContainer.insertBefore(draggedElement, targetElement.nextSibling);
+        } else {
+          letterContainer.insertBefore(draggedElement, targetElement);
+        }
+
+        allLetters.forEach((letter) => {
+          letter.dataset.letter = letter.textContent.trim();
+        });
+      }
+    });
+
+    // Check the order of the letters
+    document.getElementById("check-order").addEventListener("click", function () {
+      const lettersInOrder = Array.from(letterContainer.children).map(
+        (letter) => letter.dataset.letter
+      );
+
+      if (JSON.stringify(lettersInOrder) === JSON.stringify(correctOrder)) {
+        document.getElementById("feedback").innerText = "🎉 Correct! Well done!";
+        document.getElementById("feedback").style.color = "green";
+        document.getElementById("feedback").style.fontSize = "1.5rem";
+
+        // Disable drag-and-drop for all cards
+        letters.forEach((letter) => {
+          letter.setAttribute("draggable", "false");
+        });
+
+        // Apply zoom-in animation to the letters
+        letters.forEach((letter) => {
+          letter.querySelector(".letter-text").classList.add("zoom-in");
+        });
+
+        // Disable the Check Order button and show the Next button
+        document.getElementById("check-order").disabled = true;
+        document.getElementById("next-button").style.display = "block";
+      } else {
+        document.getElementById("feedback").innerText = "Oops! Try again! Incorrect order.";
+        document.getElementById("feedback").style.color = "red";
+        document.getElementById("feedback").style.fontSize = "1.5rem";
+      }
+    });
+  </script>
+</div>
+
+<style>
+  /* Zoom-in animation for font size */
+  @keyframes zoomIn {
+    0% {
+      font-size: 1rem;
+    }
+    100% {
+      font-size: 2.5rem;
+    }
+  }
+
+  .zoom-in {
+    animation: zoomIn 0.6s forwards;
+  }
+
+  /* Hover effect on the letter cards */
+  .letter:hover {
+    transform: scale(1.1);
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+  }
+
+  /* Drag-over effect */
+  .drag-over {
+    background-color: #ffd700; /* Highlight with yellow */
+  }
+
+  .letter[draggable="false"] {
+    opacity: 0.8;
+    pointer-events: none; /* Disable interaction */
+  }
+
+  /* Button styles */
+  .check-btn,
+  .next-btn {
+    font-size: 1.2rem;
+    font-weight: bold;
+    padding: 15px 30px;
+    border-radius: 25px;
+    text-transform: uppercase;
+    transition: background-color 0.3s ease, transform 0.2s ease-in-out;
+  }
+
+  .check-btn {
+    background-color: #ff5722;
+    color: white;
+  }
+
+  .next-btn {
+    background-color: #4caf50;
+    color: white;
+  }
+
+  .check-btn:hover {
+    background-color: #ff3d00;
+    transform: scale(1.05);
+  }
+
+  .next-btn:hover {
+    background-color: #388e3c;
+    transform: scale(1.05);
+  }
+
+  .check-btn:disabled,
+  .next-btn:disabled {
+    background-color: #bdbdbd;
+    cursor: not-allowed;
+  }
+</style>
+
+{% endblock %}

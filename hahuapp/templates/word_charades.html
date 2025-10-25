@@ -1,0 +1,184 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container text-center mt-5">
+  <h2>Word Charades</h2>
+  <video id="charadesVideo" width="300" height="300" controls autoplay muted>
+    <source src="{{ video_url }}" type="video/mp4" />
+    Your browser does not support the video tag.
+  </video>
+
+  <div class="mt-3">
+    <input
+      type="text"
+      id="guessInput"
+      placeholder="Enter your guess"
+      class="form-control"
+    />
+    <button id="submitGuess" class="btn btn-success mt-2">Submit Guess</button>
+    <button id="hintBtn" class="btn btn-info mt-2">Hint</button>
+  </div>
+
+  <div id="timer" class="mt-2 text-danger fw-bold"></div>
+
+  <div id="feedback" class="alert mt-3" style="display: none"></div>
+
+  <div class="mt-3">
+    <button id="tryAgainBtn" class="btn btn-danger" style="display: none">
+      Try Again
+    </button>
+    <a
+      href="{% url 'letter-bingo' %}"
+      id="continueBtn"
+      class="btn btn-primary"
+      style="display: none"
+      >Continue</a
+    >
+  </div>
+</div>
+
+<script>
+  const feedback = document.getElementById("feedback");
+  const tryAgainBtn = document.getElementById("tryAgainBtn");
+  const continueBtn = document.getElementById("continueBtn");
+  const guessInput = document.getElementById("guessInput");
+  const submitGuessBtn = document.getElementById("submitGuess");
+  const hintBtn = document.getElementById("hintBtn");
+  const timerDisplay = document.getElementById("timer");
+  const correctWord = "{{ correct_word }}".toLowerCase();
+  const hintText = "{{ hint }}";
+
+  let timer; // To store the timer reference
+  let timeLeft = 30; // 30 seconds
+  let timerRunning = false; // To track if the timer is running
+
+  // Start the Timer
+  function startTimer() {
+    if (!timerRunning) {
+      // Prevent multiple intervals
+      timerRunning = true; // Set timer as running
+      updateTimerDisplay(); // Display initial time
+
+      timer = setInterval(() => {
+        timeLeft -= 1;
+        updateTimerDisplay();
+
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          timerRunning = false; // Reset running status
+          handleTimeUp();
+        }
+      }, 1000);
+    }
+  }
+
+  // Update Timer Display
+  function updateTimerDisplay() {
+    timerDisplay.textContent = `Time left: ${Math.max(timeLeft, 0)}s`;
+  }
+
+  // Handle Time Up
+  function handleTimeUp() {
+    showFeedback("Time's up! Try again.", "danger");
+    disableGame();
+    showTryAgainButton();
+  }
+
+  // Handle Guess Submission
+  submitGuessBtn.addEventListener("click", () => {
+    const guess = guessInput.value.trim().toLowerCase();
+
+    if (guess === correctWord) {
+      clearInterval(timer); // Stop the timer
+      timerRunning = false; // Reset running status
+      showFeedback("Correct! Well done!", "success");
+      disableInputField();
+      showContinueButton();
+    } else {
+      showFeedback("Incorrect! Try again.", "danger");
+      showTryAgainButton();
+    }
+
+    hideSubmitButton(); // Hide submit button after submission
+  });
+
+  // Display Hint
+  hintBtn.addEventListener("click", () => {
+    showFeedback(`Hint: ${hintText}`, "info");
+    hintBtn.style.display = "none"; // Hide only the hint button
+  });
+
+  // Show Feedback Message
+  function showFeedback(message, type) {
+    feedback.textContent = message;
+    feedback.className = `alert alert-${type}`;
+    feedback.style.display = "block";
+  }
+
+  // Show Try Again Button
+  function showTryAgainButton() {
+    tryAgainBtn.style.display = "inline-block";
+  }
+
+  // Show Continue Button
+  function showContinueButton() {
+    continueBtn.style.display = "inline-block";
+  }
+
+  // Hide Submit Button
+  function hideSubmitButton() {
+    submitGuessBtn.style.display = "none";
+  }
+
+  // Disable Input Field
+  function disableInputField() {
+    guessInput.disabled = true;
+  }
+
+  // Disable Game Interaction after Time Up
+  function disableGame() {
+    guessInput.disabled = true;
+    submitGuessBtn.disabled = true;
+    hintBtn.disabled = true;
+  }
+
+  // Reset the Game on Try Again
+  tryAgainBtn.addEventListener("click", () => {
+    feedback.style.display = "none";
+    tryAgainBtn.style.display = "none";
+    guessInput.value = "";
+    guessInput.disabled = false;
+    submitGuessBtn.disabled = false;
+    hintBtn.disabled = false;
+    submitGuessBtn.style.display = "inline-block";
+    hintBtn.style.display = "inline-block";
+
+    // If the timer is still running, just clear the input and feedback
+    if (timerRunning) {
+      guessInput.value = "";
+    } else {
+      // Reset time only if the timer has ended
+      timeLeft = 30;
+      updateTimerDisplay(); // Update display immediately
+      startTimer(); // Restart the timer
+    }
+  });
+
+  // Start the timer when the page loads
+  window.onload = startTimer;
+</script>
+
+<style>
+  video {
+    object-fit: cover; /* Ensure video stays within the square */
+    border-radius: 10px; /* Optional rounded corners */
+  }
+
+  .container {
+    max-width: 400px; /* Limit container size for better layout */
+    margin: auto;
+  }
+
+  #timer {
+    font-size: 18px;
+  }
+</style>
+{% endblock %}

@@ -1,0 +1,128 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container text-center mt-5">
+  <h2>Trace the Word</h2>
+  <p class="lead">Trace the word: <strong>{{ selected_word }}</strong></p>
+
+  <div class="canvas-container mt-3">
+    <canvas
+      id="tracingCanvas"
+      width="500"
+      height="200"
+      style="border: 2px solid #333"
+    ></canvas>
+  </div>
+
+  <div id="actionButtons" class="mt-3">
+    <button id="clearCanvas" class="btn btn-warning">Clear</button>
+    <button id="submitTrace" class="btn btn-success">Submit</button>
+  </div>
+
+  <div class="mt-3 text-center">
+    <button id="tryAgainBtn" class="btn btn-danger" style="display: none">
+      Try Again
+    </button>
+    <a
+      href="{% url 'word-formation-2' %}"
+      id="continueBtn"
+      class="btn btn-primary"
+      style="display: none"
+    >
+      Continue
+    </a>
+  </div>
+
+  <div id="feedback" class="alert mt-3 text-center" style="display: none"></div>
+</div>
+
+<script>
+  const canvas = document.getElementById("tracingCanvas");
+  const ctx = canvas.getContext("2d");
+  const feedback = document.getElementById("feedback");
+  const tryAgainBtn = document.getElementById("tryAgainBtn");
+  const continueBtn = document.getElementById("continueBtn");
+  const actionButtons = document.getElementById("actionButtons");
+
+  let drawing = false;
+  let studentPath = [];
+  let tracingEnabled = true; // Flag to enable/disable tracing
+
+  // Set up canvas styles
+  ctx.lineWidth = 5;
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "#000";
+
+  // Event listeners for drawing
+  canvas.addEventListener("mousedown", (e) => startDrawing(e));
+  canvas.addEventListener("mouseup", stopDrawing);
+  canvas.addEventListener("mousemove", (e) => draw(e));
+  canvas.addEventListener("touchstart", (e) => startDrawing(e.touches[0]));
+  canvas.addEventListener("touchend", stopDrawing);
+  canvas.addEventListener("touchmove", (e) => draw(e.touches[0]));
+
+  function startDrawing(event) {
+    if (!tracingEnabled) return; // Prevent drawing if disabled
+    drawing = true;
+    studentPath = [];
+    ctx.beginPath();
+    const { offsetX, offsetY } = getEventCoords(event);
+    ctx.moveTo(offsetX, offsetY);
+    studentPath.push([offsetX, offsetY]);
+  }
+
+  function stopDrawing() {
+    drawing = false;
+    ctx.closePath();
+  }
+
+  function draw(event) {
+    if (!drawing || !tracingEnabled) return; // Prevent drawing if disabled
+    const { offsetX, offsetY } = getEventCoords(event);
+    ctx.lineTo(offsetX, offsetY);
+    ctx.stroke();
+    studentPath.push([offsetX, offsetY]);
+  }
+
+  function getEventCoords(event) {
+    return {
+      offsetX: event.clientX - canvas.offsetLeft,
+      offsetY: event.clientY - canvas.offsetTop,
+    };
+  }
+
+  document.getElementById("clearCanvas").addEventListener("click", () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    studentPath = [];
+    feedback.style.display = "none";
+    tryAgainBtn.style.display = "none";
+    continueBtn.style.display = "none";
+  });
+
+  document.getElementById("submitTrace").addEventListener("click", () => {
+    feedback.textContent = "Good job! Would you like to try again or continue?";
+    feedback.className = "alert alert-info";
+    feedback.style.display = "block";
+
+    // Disable tracing
+    tracingEnabled = false;
+
+    // Hide action buttons
+    actionButtons.style.display = "none";
+    tryAgainBtn.style.display = "inline-block";
+    continueBtn.style.display = "inline-block";
+  });
+
+  tryAgainBtn.addEventListener("click", () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    studentPath = [];
+    feedback.style.display = "none";
+    tryAgainBtn.style.display = "none";
+    continueBtn.style.display = "none";
+
+    // Re-enable tracing
+    tracingEnabled = true;
+
+    // Show action buttons again
+    actionButtons.style.display = "block";
+  });
+</script>
+{% endblock %}

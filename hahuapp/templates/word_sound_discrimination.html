@@ -1,0 +1,108 @@
+{% extends "base.html" %} {% block content %}
+<h3 class="text-center">Identify the Sound that is Different</h3>
+
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    {% for sound in game_data.sounds %}
+    <div class="col-12 col-sm-6 col-md-3 text-center mb-4">
+      <audio controls preload="none" class="w-100">
+        <source src="{{ sound }}" type="audio/mp3" />
+        Your browser does not support the audio element.
+      </audio>
+      <button
+        class="btn btn-primary mt-2 sound-choice w-100"
+        data-sound="{{ sound }}"
+      >
+        Select
+      </button>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="text-center mt-4">
+  <p id="odd-letter" class="text-center" style="display: none">
+    The odd Word:
+    <span class="text-center fs-1 fw-bold">{{ game_data.odd }}</span>
+  </p>
+  <p id="others-letter" class="text-center" style="display: none">
+    The three Words:
+    <span class="text-center fs-1 fw-bold">{{ game_data.others }}</span>
+  </p>
+  <p
+    id="feedback"
+    class="alert alert-success fw-bold"
+    style="display: none"
+  ></p>
+
+  <a
+    href="{% url 'letter-sound-memory' %}"
+    id="continue-btn"
+    class="btn btn-success mt-2"
+    style="display: none"
+  >
+    Continue
+  </a>
+</div>
+
+<script>
+  let isPlaying = false; // Track if audio is currently playing
+  let correctSelected = false; // Track if the correct sound has been selected
+
+  // Function to play audio when button is clicked
+  function playAudio(src) {
+    const audio = new Audio(src);
+    audio
+      .play()
+      .then(() => {
+        isPlaying = true; // Set to true when audio starts playing
+      })
+      .catch((error) => {
+        console.error("Audio playback failed:", error);
+      });
+
+    audio.onended = () => {
+      isPlaying = false; // Reset when audio ends
+    };
+  }
+
+  // Add event listener to each button
+  document.querySelectorAll(".sound-choice").forEach((button) => {
+    button.addEventListener("click", function () {
+      // Prevent clicking if audio is playing
+      if (isPlaying || correctSelected) return;
+
+      const selectedSound = this.dataset.sound;
+      const correctSound = "{{ game_data.correct }}";
+      const feedback = document.getElementById("feedback");
+      const continueBtn = document.getElementById("continue-btn");
+
+      // Check if the selected sound is correct
+      if (selectedSound === correctSound) {
+        feedback.textContent = "Well Done!";
+        feedback.style.color = "green";
+        feedback.classList.remove("alert-danger");
+        feedback.classList.add("alert-success");
+        feedback.style.display = "block";
+        document.getElementById("odd-letter").style.display = "block";
+        document.getElementById("others-letter").style.display = "block";
+        correctSelected = true;
+        continueBtn.style.display = "inline-block";
+
+        // Disable all buttons except the correct one
+        document.querySelectorAll(".sound-choice").forEach((btn) => {
+          if (btn.dataset.sound !== correctSound) {
+            btn.disabled = true;
+          }
+        });
+      } else {
+        feedback.textContent = "Try again!";
+        feedback.style.color = "red";
+        feedback.classList.remove("alert-success");
+        feedback.classList.add("alert-danger");
+        feedback.style.display = "block";
+      }
+    });
+  });
+</script>
+{% endblock %}

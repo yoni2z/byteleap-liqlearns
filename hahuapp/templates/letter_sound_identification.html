@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2 class="text-center">Identify the Sound for the Letter: <strong>{{ letter }}</strong></h2>
+
+<div class="container">
+    <h3 class="mt-4">Listen to the sounds:</h3>
+    <div class="list-group">
+        {% for sound in sound_choices %}
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <span>Sound {{ forloop.counter }}</span>
+                <button class="btn btn-primary" onclick="playSound('{{ sound.sound_field.url }}')">
+                    <i class="bi bi-volume-up"></i> Play
+                </button>
+            </div>
+        {% endfor %}
+    </div>
+
+    <h3 class="mt-4">Select the correct sound:</h3>
+    <div class="list-group" id="sound-options">
+        {% for sound in sound_choices %}
+            <button class="list-group-item list-group-item-action" onclick="checkAnswer('{{ sound.sound_field.url }}', '{{ correct_sound }}', this)">
+                Choose Sound {{ forloop.counter }}
+            </button>
+        {% endfor %}
+    </div>
+
+    <div id="feedback" class="mt-4" style="font-size: 18px;"></div>
+
+    <!-- Refresh Button -->
+    <div class="text-center mt-4">
+        <button class="btn btn-secondary" onclick="refreshPage()">
+            <i class="bi bi-arrow-clockwise"></i> Refresh Question
+        </button>
+    </div>
+</div>
+
+<script>
+    function playSound(url) {
+        const audio = new Audio(url);
+        audio.play();
+    }
+
+    function checkAnswer(selectedSound, correctSound, selectedButton) {
+        const feedbackDiv = document.getElementById('feedback');
+        const soundOptions = document.querySelectorAll('#sound-options button');
+
+        if (selectedSound === correctSound) {
+            feedbackDiv.textContent = 'Correct!';
+            feedbackDiv.style.color = 'green';
+            // Disable other buttons
+            soundOptions.forEach(button => {
+                if (button !== selectedButton) {
+                    button.disabled = true;
+                }
+            });
+        } else {
+            feedbackDiv.textContent = 'Try again!';
+            feedbackDiv.style.color = 'red';
+        }
+    }
+
+    function refreshPage() {
+        location.reload();  // Reload the current page to get a new question
+    }
+</script>
+
+<!-- Include Bootstrap 5 Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+{% endblock %}

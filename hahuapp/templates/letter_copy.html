@@ -1,0 +1,158 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container mt-5">
+  <h1 class="text-center mb-4">Letter Copy Activity</h1>
+
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <h3 class="text-center mb-3">Watch the Video and Copy the Letters</h3>
+      <div class="ratio ratio-16x9 mb-4">
+        <video controls>
+          <source src="{{ letter_video.video.url }}" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      </div>
+
+      <form method="POST" class="mb-4">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label for="letters" class="form-label"
+            >Enter the Letters Shown in the Video:</label
+          >
+          <input
+            type="text"
+            id="letters"
+            name="letters"
+            class="form-control"
+            placeholder="Type the letters here"
+            required
+          />
+        </div>
+
+        <div class="d-grid">
+          <button
+            type="submit"
+            class="btn"
+            style="background: linear-gradient(to bottom, #ffefd5, #ffe4b5)"
+          >
+            Submit
+          </button>
+        </div>
+      </form>
+
+      {% if feedback %}
+      <div class="alert alert-info text-center">{{ feedback }}</div>
+      {% endif %}
+
+      <h3 class="text-center mt-4">Practice Writing Letters</h3>
+      <div
+        class="border border-primary rounded p-2"
+        style="background-color: #f8f9fa"
+      >
+        <canvas
+          id="tracingBoard"
+          class="border"
+          width="400"
+          height="200"
+          style="border-radius: 8px; background-color: #fff"
+        ></canvas>
+      </div>
+      <div class="text-center mt-2">
+        <button id="clearBoard" class="btn btn-secondary">Clear Board</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const canvas = document.getElementById("tracingBoard");
+  const ctx = canvas.getContext("2d");
+  let drawing = false;
+
+  // Get the position of the touch or mouse relative to the canvas
+  function getPosition(event) {
+    const rect = canvas.getBoundingClientRect();
+    if (event.touches) {
+      // For touch events
+      return {
+        x: event.touches[0].clientX - rect.left,
+        y: event.touches[0].clientY - rect.top,
+      };
+    } else {
+      // For mouse events
+      return {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top,
+      };
+    }
+  }
+
+  // Start drawing when the user touches or clicks
+  function startDrawing(event) {
+    event.preventDefault(); // Prevent scrolling on mobile
+    drawing = true;
+    const { x, y } = getPosition(event);
+    ctx.beginPath();
+    ctx.moveTo(x, y); // Start the drawing path
+  }
+
+  // Stop drawing when the user releases touch or mouse
+  function stopDrawing(event) {
+    event.preventDefault(); // Prevent scrolling on mobile
+    drawing = false;
+    ctx.closePath(); // Close the path to finish drawing
+  }
+
+  // Draw on the canvas as the user moves the mouse or finger
+  function draw(event) {
+    if (!drawing) return;
+    event.preventDefault(); // Prevent scrolling on mobile
+    const { x, y } = getPosition(event);
+    ctx.lineTo(x, y); // Draw a line to the new position
+    ctx.strokeStyle = "black"; // Set the drawing color
+    ctx.lineWidth = 2; // Set the width of the line
+    ctx.stroke(); // Render the line
+  }
+
+  // Clear the canvas when the user clicks the "Clear Board" button
+  document.getElementById("clearBoard").addEventListener("click", () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the entire canvas
+    drawBackgroundLetter("{{ letter_image.letter }}"); // Redraw the background letter
+  });
+
+  // Mouse events for desktop devices
+  canvas.addEventListener("mousedown", startDrawing);
+  canvas.addEventListener("mouseup", stopDrawing);
+  canvas.addEventListener("mousemove", draw);
+
+  // Touch events for mobile devices
+  canvas.addEventListener("touchstart", startDrawing);
+  canvas.addEventListener("touchend", stopDrawing);
+  canvas.addEventListener("touchmove", draw);
+
+  // Optional: Handle canvas resizing for mobile devices or window resizing
+  window.addEventListener("resize", resizeCanvas);
+  resizeCanvas(); // Call once on page load to ensure correct sizing
+
+  // Function to adjust the canvas size for device pixel ratio
+  function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * window.devicePixelRatio;
+    canvas.height = rect.height * window.devicePixelRatio;
+    canvas.style.width = `${rect.width}px`;
+    canvas.style.height = `${rect.height}px`;
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio); // Scale context for device pixel ratio
+  }
+
+  // Function to draw the background letter (for tracing)
+  function drawBackgroundLetter(letter) {
+    ctx.font = "100px Arial"; // Set the font size and type
+    ctx.fillStyle = "rgba(0, 0, 0, 0.1)"; // Set a faded color for the background letter
+    ctx.textAlign = "center"; // Center the text horizontally
+    ctx.textBaseline = "middle"; // Center vertically
+    ctx.fillText(letter, canvas.width / 2, canvas.height / 2); // Draw the letter in the center
+  }
+
+  // Draw the background letter when the page loads
+  drawBackgroundLetter("{{ letter_image.letter }}");
+</script>
+{% endblock %}

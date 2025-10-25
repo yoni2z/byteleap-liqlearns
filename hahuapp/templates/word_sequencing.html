@@ -1,0 +1,117 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container text-center mt-5">
+  <h2 class="text-center fw-bold">
+    Arrange the Letters to Create a Meaningful Word
+  </h2>
+
+  <!-- Shuffled Letters -->
+  <div class="d-flex justify-content-center mt-4" id="shuffled-letters">
+    {% for letter in shuffled_letters %}
+    <button class="btn btn-secondary mx-1 letter-btn">{{ letter }}</button>
+    {% endfor %}
+  </div>
+
+  <!-- Selected Letters -->
+  <div class="d-flex justify-content-center mt-4" id="selected-letters"></div>
+
+  <!-- Buttons and Feedback -->
+  <button class="btn btn-primary mt-3" id="submit-btn">Submit</button>
+  <button class="btn btn-warning mt-3 d-none" id="try-again-btn">
+    Try Again
+  </button>
+  <a
+    href="{% url 'word-sound-identification' %}"
+    class="btn btn-success mt-3 d-none"
+    id="continue-btn"
+  >
+    Continue
+  </a>
+
+  <p id="feedback" class="mt-3 alert text-center"></p>
+</div>
+
+<script>
+  const originalWord = "{{ original_word }}";
+  const selectedLettersDiv = document.getElementById("selected-letters");
+  const submitButton = document.getElementById("submit-btn");
+  const tryAgainButton = document.getElementById("try-again-btn");
+  const continueButton = document.getElementById("continue-btn");
+  const feedback = document.getElementById("feedback");
+
+  let selectedLetters = [];
+
+  // Handle letter selection
+  document.querySelectorAll(".letter-btn").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedLetters.push(button.textContent);
+      selectedLettersDiv.innerHTML = selectedLetters.join(" ");
+      button.disabled = true; // Disable selected button
+    });
+  });
+
+  // Handle submission
+  submitButton.addEventListener("click", () => {
+    const userWord = selectedLetters.join("");
+    if (userWord === originalWord) {
+      // Success feedback
+      feedback.style.color = "green";
+      feedback.textContent = "Great job! You Created the word correctly!";
+      feedback.className = "mt-3 alert alert-success"; // Apply success alert class
+      selectedLettersDiv.innerHTML = `<strong style="font-size: 2rem;">${originalWord}</strong>`;
+      submitButton.classList.add("d-none");
+      continueButton.classList.remove("d-none");
+    } else {
+      // Incorrect feedback
+      feedback.style.color = "red";
+      feedback.textContent = "Incorrect! Try again.";
+      feedback.className = "mt-3 alert alert-danger"; // Apply danger alert class
+      highlightIncorrectLetters(userWord);
+      submitButton.classList.add("d-none");
+      tryAgainButton.classList.remove("d-none");
+    }
+  });
+
+  // Handle "Try Again" button click
+  tryAgainButton.addEventListener("click", resetGame);
+
+  // Reset the game
+  function resetGame() {
+    selectedLetters = [];
+    selectedLettersDiv.innerHTML = "";
+    feedback.textContent = "";
+    feedback.className = "mt-3 alert"; // Reset alert class
+    document.querySelectorAll(".letter-btn").forEach((button) => {
+      button.disabled = false;
+      button.classList.remove("btn-danger", "btn-success");
+    });
+    submitButton.classList.remove("d-none");
+    tryAgainButton.classList.add("d-none");
+  }
+
+  // Highlight incorrect letters
+  function highlightIncorrectLetters(userWord) {
+    const originalLetters = originalWord.split("");
+    const buttons = Array.from(document.querySelectorAll(".letter-btn"));
+
+    // Reset previous highlights
+    buttons.forEach((button) => {
+      button.classList.remove("btn-danger", "btn-success");
+    });
+
+    // Compare user's selected letters with the original word
+    userWord.split("").forEach((letter, index) => {
+      const button = buttons.find(
+        (btn) => btn.textContent === letter && btn.disabled
+      );
+
+      if (button) {
+        if (originalLetters[index] === letter) {
+          button.classList.add("btn-success");
+        } else {
+          button.classList.add("btn-danger");
+        }
+      }
+    });
+  }
+</script>
+{% endblock %}

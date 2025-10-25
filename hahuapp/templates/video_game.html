@@ -1,0 +1,43 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container mt-5 mb-5">
+  <div class="row justify-content-center" style="min-height: 60vh">
+    <div class="col-md-8 text-center">
+      <h2 class="display-4 mb-4">Describe the Video</h2>
+
+      <!-- Responsive video with fixed aspect ratio -->
+      <div class="embed-responsive embed-responsive-16by9 mb-4">
+        <video class="embed-responsive-item" controls>
+          <source src="{{ video.video_file.url }}" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      </div>
+
+      <p class="lead mb-4">
+        Write a paragraph about the video you just watched:
+      </p>
+
+      <form
+        method="POST"
+        action="{% url 'submit-video-response' video.id %}"
+        enctype="multipart/form-data"
+        class="shadow p-4 rounded-3 bg-light"
+      >
+        {% csrf_token %}
+        <textarea
+          class="form-control mb-3"
+          rows="5"
+          name="response"
+          placeholder="Write your description here"
+        ></textarea>
+        <button
+          type="submit"
+          class="btn w-100"
+          style="background: linear-gradient(to bottom, #ffefd5, #ffe4b5)"
+        >
+          Submit
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

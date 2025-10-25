@@ -1,0 +1,262 @@
+{% extends "base.html" %} {% block content %}
+<div class="container">
+  <h1 class="text-center text-primary">{{ story.title }}</h1>
+  <p class="text-secondary lead">{{ part.text_content }}</p>
+
+  <div class="text-center mb-4">
+    <audio controls class="audio-control">
+      <source src="{{ part.audio_file.url }}" type="audio/mpeg" />
+      Your browser does not support the audio element.
+    </audio>
+  </div>
+
+  <form id="question-form" method="post" class="question-section">
+    {% csrf_token %} {% for question in part.questions.all %}
+    <div class="question-card">
+      <p class="question-text"><strong>{{ question.question_text }}</strong></p>
+      <div class="options-container">
+        {% for option in question.options %}
+        <button
+          type="button"
+          class="btn option-btn"
+          data-question-id="{{ question.id }}"
+          data-answer="{{ option }}"
+        >
+          {{ option }}
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary mt-4">Submit Answers</button>
+  </form>
+
+  <div id="feedback" class="feedback-section" style="display: none"></div>
+
+  {% if next_part %}
+  <div class="text-center">
+    <a
+      href="{% url 'story-telling-part' story.id next_part.part_number %}"
+      id="next-button"
+      class="btn btn-success mt-3 next-btn"
+      disabled
+    >
+      Next
+    </a>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Add custom CSS for a child-friendly look -->
+<style>
+  body {
+    background: linear-gradient(to right, #ffecd2, #fcb69f);
+    font-family: "Comic Sans MS", "Chalkboard SE", sans-serif;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    color: #007bff;
+  }
+
+  .lead {
+    font-size: 1.2rem;
+    color: #555;
+  }
+
+  .audio-control {
+    border-radius: 10px;
+    background-color: #fff8e1;
+    padding: 10px;
+  }
+
+  .question-card {
+    background: #fff8e1;
+    border: 2px solid #ffcc80;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .question-text {
+    font-size: 1.2rem;
+    color: #333;
+  }
+
+  .options-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .option-btn {
+    font-size: 1rem;
+    padding: 10px 20px;
+    border-radius: 20px;
+    background-color: #ffcc80;
+    color: #fff;
+    border: none;
+    box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease-in-out;
+  }
+
+  .option-btn:hover {
+    background-color: #ffb74d;
+    transform: translateY(-2px);
+  }
+
+  .option-btn.btn-primary {
+    background-color: #4caf50 !important;
+    color: #fff;
+  }
+
+  .feedback-section {
+    margin-top: 20px;
+    padding: 15px;
+    border: 2px dashed #ffcc80;
+    border-radius: 10px;
+    background-color: #fdf5e6;
+  }
+
+  .feedback-section div {
+    font-size: 1rem;
+    color: #333;
+  }
+
+  .next-btn {
+    font-size: 1.5rem;
+    padding: 10px 30px;
+    background-color: #81c784;
+    color: #fff;
+    border: none;
+    border-radius: 25px;
+    transition: background-color 0.3s ease-in-out;
+  }
+
+  .next-btn:disabled {
+    background-color: #bdbdbd;
+  }
+
+  .next-btn:hover:not([disabled]) {
+    background-color: #66bb6a;
+  }
+</style>
+
+<script>
+  function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+
+  // Shuffle the options for each question
+  document.querySelectorAll(".options-container").forEach((container) => {
+    const buttons = Array.from(container.children);
+    const shuffledButtons = shuffle(buttons);
+    container.innerHTML = ""; // Clear existing buttons
+    shuffledButtons.forEach((button) => container.appendChild(button));
+  });
+  // Function to check if the student has interacted with at least one question
+  function isQuestionAttempted() {
+    return document.querySelectorAll('[name^="answer_"]').length > 0;
+  }
+
+  // Update the Next button's state based on interactions
+  function updateNextButtonState() {
+    const nextButton = document.getElementById("next-button");
+    if (isQuestionAttempted()) {
+      nextButton.disabled = false;
+      nextButton.classList.remove("disabled");
+    } else {
+      nextButton.disabled = true;
+      nextButton.classList.add("disabled");
+    }
+  }
+
+  document.querySelectorAll(".option-btn").forEach((button) => {
+    button.addEventListener("click", function () {
+      const questionId = this.getAttribute("data-question-id");
+      const answer = this.getAttribute("data-answer");
+
+      // Add the answer to the form as a hidden input field
+      const inputName = `answer_${questionId}`;
+      let input = document.querySelector(`[name="${inputName}"]`);
+      if (!input) {
+        input = document.createElement("input");
+        input.type = "hidden";
+        input.name = inputName;
+        document.getElementById("question-form").appendChild(input);
+      }
+      input.value = answer;
+
+      // Change the appearance of the selected answer
+      this.classList.remove("btn-outline-primary");
+      this.classList.add("btn-primary");
+      [...this.parentNode.children].forEach((sibling) => {
+        if (sibling !== this) {
+          sibling.classList.remove("btn-primary");
+          sibling.classList.add("btn-outline-primary");
+        }
+      });
+
+      // Enable the Next button once any question is attempted
+      updateNextButtonState();
+    });
+  });
+
+  // Ensure the Next button starts disabled
+  document.addEventListener("DOMContentLoaded", updateNextButtonState);
+
+  document
+    .getElementById("question-form")
+    .addEventListener("submit", async function (event) {
+      event.preventDefault();
+      const formData = new FormData(this);
+      const response = await fetch(window.location.href, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+
+      const feedbackDiv = document.getElementById("feedback");
+      feedbackDiv.style.display = "block";
+      feedbackDiv.innerHTML = "";
+
+      for (const [questionId, result] of Object.entries(data.results)) {
+        const feedback = document.createElement("div");
+        feedback.innerHTML = `
+        <strong>${
+          result.correct
+            ? "Correct!"
+            : `Incorrect. Correct Answer: ${result.correct_answer}`
+        }</strong>
+        <hr>
+      `;
+        feedbackDiv.appendChild(feedback);
+
+        const buttons = document.querySelectorAll(
+          `.option-btn[data-question-id="${questionId}"]`
+        );
+        buttons.forEach((button) => {
+          const answer = button.getAttribute("data-answer");
+          if (answer === result.correct_answer) {
+            button.style.backgroundColor = "#d4edda";
+            button.style.color = "#155724";
+          } else if (answer === result.user_answer) {
+            button.style.backgroundColor = "#f8d7da";
+            button.style.color = "#721c24";
+          } else {
+            button.style.backgroundColor = "";
+            button.style.color = "";
+          }
+        });
+      }
+
+      updateNextButtonState();
+    });
+</script>
+
+{% endblock content %}

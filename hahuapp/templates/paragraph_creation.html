@@ -1,0 +1,187 @@
+{% extends "base.html" %} {% block content %}
+
+<div class="container text-center">
+  <h2 class="mb-4">Arrange Sentences to Form a Correct Paragraph</h2>
+
+  <div id="sentence-list" class="d-flex flex-column mb-4">
+    {% for sentence in shuffled_sentences %}
+    <div class="draggable" draggable="true" data-id="{{ forloop.counter0 }}">
+      {{ sentence }}
+    </div>
+    {% endfor %}
+  </div>
+
+  <h5>Drag and drop the sentences to form the correct paragraph:</h5>
+  <div id="dropzone" class="dropzone"></div>
+
+  <!-- Current Paragraph Preview -->
+  <div class="mt-4">
+    <h5>Current Paragraph:</h5>
+    <p id="current-paragraph" class="border p-3 bg-light"></p>
+  </div>
+
+  <button id="submit-btn" class="btn btn-success mt-3" onclick="checkOrder()">
+    Submit
+  </button>
+  <button
+    id="try-again-btn"
+    class="btn btn-warning mt-3 d-none"
+    onclick="resetGame()"
+  >
+    Try Again
+  </button>
+  <a
+    href="{% url 'paragraph-creation' %}"
+    id="continue-btn"
+    class="btn btn-primary mt-3 d-none"
+  >
+    Continue
+  </a>
+
+  <div id="feedback" class="mt-3"></div>
+</div>
+
+<script>
+  const draggables = document.querySelectorAll('.draggable');
+  const dropzone = document.getElementById('dropzone');
+  const submitBtn = document.getElementById('submit-btn');
+  const tryAgainBtn = document.getElementById('try-again-btn');
+  const continueBtn = document.getElementById('continue-btn');
+  const feedback = document.getElementById('feedback');
+  const currentParagraph = document.getElementById('current-paragraph');
+  const correctOrder = {{ correct_order|safe }};
+  let draggedItem = null;
+
+  // Enable drag-and-drop functionality
+  draggables.forEach(draggable => {
+    draggable.addEventListener('dragstart', () => {
+      draggedItem = draggable;
+      setTimeout(() => draggable.classList.add('hidden'), 0);
+    });
+
+    draggable.addEventListener('dragend', () => {
+      setTimeout(() => draggable.classList.remove('hidden'), 0);
+      draggedItem = null;
+    });
+  });
+
+  dropzone.addEventListener('dragover', e => {
+    e.preventDefault();
+    const afterElement = getDragAfterElement(dropzone, e.clientY);
+    if (afterElement == null) {
+      dropzone.appendChild(draggedItem);
+    } else {
+      dropzone.insertBefore(draggedItem, afterElement);
+    }
+    updateCurrentParagraph();
+  });
+
+  function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.draggable:not(.hidden)')];
+    return draggableElements.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) {
+        return { offset: offset, element: child };
+      } else {
+        return closest;
+      }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+  }
+
+  function updateCurrentParagraph() {
+    const sentences = Array.from(dropzone.children).map(el => el.textContent);
+    currentParagraph.textContent = sentences.join(" ");
+  }
+
+  function checkOrder() {
+  // Get the sentence text for each item in dropzone
+  const arrangedOrder = Array.from(dropzone.children).map(el => el.textContent.trim());
+
+  if (JSON.stringify(arrangedOrder) === JSON.stringify(correctOrder)) {
+    // Correct answer
+    feedback.textContent = 'Correct! You arranged the sentences properly.';
+    feedback.className = 'alert alert-success';
+    continueBtn.classList.remove('d-none');
+
+    // Highlight the current paragraph in green and bold
+    currentParagraph.classList.add('correct-paragraph');
+    currentParagraph.classList.remove('incorrect-paragraph');
+  } else {
+    // Incorrect answer
+    feedback.textContent = 'Incorrect. Please try again!';
+    feedback.className = 'alert alert-danger';
+    tryAgainBtn.classList.remove('d-none');
+
+    // Highlight the current paragraph in red
+    currentParagraph.classList.add('incorrect-paragraph');
+    currentParagraph.classList.remove('correct-paragraph');
+  }
+
+  disableGame();
+  }
+
+
+
+  function disableGame() {
+    submitBtn.disabled = true;
+    draggables.forEach(draggable => draggable.setAttribute('draggable', 'false'));
+  }
+
+  function resetGame() {
+    feedback.textContent = '';
+    feedback.className = '';
+    dropzone.innerHTML = '';
+    tryAgainBtn.classList.add('d-none');
+    submitBtn.disabled = false;
+    draggables.forEach(draggable => {
+      draggable.setAttribute('draggable', 'true');
+      draggable.classList.remove('correct', 'incorrect');
+    });
+    const sentenceList = document.getElementById('sentence-list');
+    draggables.forEach(draggable => sentenceList.appendChild(draggable));
+    currentParagraph.textContent = '';
+  }
+</script>
+
+<style>
+  .draggable {
+    padding: 10px;
+    margin: 5px;
+    background-color: #f0f0f0;
+    cursor: move;
+    border-radius: 5px;
+  }
+
+  .dropzone {
+    min-height: 50px;
+    padding: 10px;
+    background-color: #e9ecef;
+    border: 2px dashed #6c757d;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .correct {
+    background-color: #c3e6cb;
+  }
+
+  .incorrect {
+    background-color: #f5c6cb;
+  }
+
+  .correct-paragraph {
+    background-color: #c3e6cb; /* Light green */
+    font-weight: bold;
+  }
+
+  .incorrect-paragraph {
+    background-color: #f5c6cb; /* Light red */
+    font-weight: normal;
+  }
+</style>
+
+{% endblock %}

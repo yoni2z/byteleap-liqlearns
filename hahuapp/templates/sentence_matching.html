@@ -1,0 +1,92 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container text-center mt-5">
+  <h1>Guess the definition of the following sentence</h1>
+
+  <div class="mt-4 fs-3">{{ selected_sentence.sentence }}</div>
+
+  <div class="d-flex justify-content-center mt-4">
+    <div class="row w-50">
+      {% for choice in choices %}
+      <div class="col-12 mb-3 d-flex justify-content-center">
+        <button
+          class="btn btn-secondary text-dark choice-button"
+          data-letter="{{ choice }}"
+          style="width: 100%; font-size: 24px"
+        >
+          {{ choice }}
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div id="feedback" class="alert text-center mt-3" style="display: none"></div>
+
+  <div
+    class="text-center d-flex justify-content-center align-items-center mt-4"
+  >
+    <a
+      href="{% url 'sentence-hunt' %}"
+      id="next-button"
+      class="btn btn-success w-25"
+      style="display: none"
+    >
+      Continue
+    </a>
+  </div>
+</div>
+
+<script>
+  const correctDefinition = "{{ selected_sentence.definition }}";
+  const feedback = document.getElementById("feedback");
+  const nextButton = document.getElementById("next-button");
+
+  // Add event listeners to all buttons
+  document.querySelectorAll(".choice-button").forEach((button) => {
+    button.addEventListener("click", () => {
+      const selectedDefinition = button.getAttribute("data-letter");
+
+      if (selectedDefinition === correctDefinition) {
+        // Correct guess
+        feedback.textContent = "Good work!";
+        feedback.className = "alert alert-success text-center mt-3";
+        feedback.style.display = "block";
+
+        // Highlight the correct button
+        button.classList.add("btn-success");
+        button.style.border = "2px solid #28a745";
+        button.style.backgroundColor = "#d4edda";
+
+        // Disable all buttons and show the "Continue" button
+        disableAllButtons();
+        nextButton.style.display = "block";
+      } else {
+        // Incorrect guess
+        feedback.textContent = "Try again!";
+        feedback.className = "alert alert-danger text-center mt-3";
+        feedback.style.display = "block";
+
+        // Highlight the incorrect button
+        button.classList.add("btn-danger");
+        button.style.border = "2px solid #dc3545";
+        button.style.backgroundColor = "#f8d7da";
+
+        // Remove the highlight after 1 second
+        setTimeout(() => {
+          button.classList.remove("btn-danger");
+          button.style.border = "";
+          button.style.backgroundColor = "";
+        }, 1000);
+      }
+    });
+  });
+
+  // Disable all buttons
+  function disableAllButtons() {
+    document.querySelectorAll(".choice-button").forEach((button) => {
+      button.disabled = true;
+    });
+  }
+</script>
+
+{% endblock %}

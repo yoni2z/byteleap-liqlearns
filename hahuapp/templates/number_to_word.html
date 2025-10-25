@@ -1,0 +1,96 @@
+{% extends "base.html" %} {% block content %}
+
+<div class="container mt-5">
+  <h2
+    class="text-center text-primary mb-4"
+    style="font-family: 'Comic Sans MS', sans-serif"
+  >
+    Number to Amharic Word Converter
+  </h2>
+
+  <form
+    id="conversionForm"
+    method="get"
+    action="{% url 'number-to-word' %}"
+    style="
+      background-color: #f7f7f7;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    "
+  >
+    <div class="form-group">
+      <label for="number" style="font-size: 18px; font-weight: bold"
+        >Enter a Number:</label
+      >
+      <input
+        type="number"
+        class="form-control"
+        id="number"
+        name="number"
+        placeholder="Type a number"
+        required
+        style="
+          font-size: 18px;
+          border-radius: 10px;
+          padding: 10px;
+          border: 2px solid #00bcd4;
+          transition: border-color 0.3s ease;
+        "
+        onfocus="this.style.borderColor='#ff4081';"
+        onblur="this.style.borderColor='#00bcd4';"
+      />
+    </div>
+    <button
+      type="submit"
+      class="btn btn-success mt-3"
+      style="
+        width: 100%;
+        font-size: 18px;
+        border-radius: 50px;
+        padding: 12px;
+        background-color: #ff4081;
+      "
+    >
+      Convert
+    </button>
+  </form>
+
+  <script>
+    document.getElementById("conversionForm").onsubmit = function (event) {
+      let numberInput = document.getElementById("number").value;
+      if (numberInput === "") {
+        event.preventDefault(); // Prevent form submission if input is empty
+        alert("Please enter a valid number.");
+      }
+    };
+  </script>
+
+  {% if amharic_number and number_name %}
+  <div class="mt-4">
+    <h4
+      class="text-center text-info"
+      style="font-family: 'Comic Sans MS', sans-serif"
+    >
+      Here is your result!
+    </h4>
+    <p class="text-center" style="font-size: 24px; color: #4caf50">
+      <strong>Amharic Number:</strong>
+      <span style="font-size: 36px">{{ amharic_number }}</span>
+    </p>
+    <p class="text-center" style="font-size: 24px; color: #4caf50">
+      <strong>Word Name:</strong>
+      <span style="font-size: 36px">{{ number_name }}</span>
+    </p>
+  </div>
+  {% elif number_input %}
+  <div class="mt-4">
+    <p class="text-center text-danger" style="font-size: 20px">
+      Oops! The number {{ number_input }} could not be found in the database.
+      Please try another one!
+    </p>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock content %}

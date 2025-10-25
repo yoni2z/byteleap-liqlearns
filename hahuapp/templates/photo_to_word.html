@@ -1,0 +1,94 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container text-center mt-5">
+  <h2>Guess the Word for the Image</h2>
+
+  <!-- Display the image -->
+  <div class="mt-4">
+    <img
+      id="word-image"
+      src="{{ image_url }}"
+      class="img-fluid"
+      alt="Word Image"
+      width="200px"
+      height="auto"
+    />
+  </div>
+
+  <!-- Choice buttons for the word options -->
+  <div class="d-flex justify-content-center mt-4">
+    <div class="row w-50">
+      {% for choice in choices %}
+      <div class="col-6 mb-3 d-flex justify-content-center">
+        <button
+          class="btn choice-button"
+          data-word="{{ choice }}"
+          style="
+            width: 100%;
+            font-size: 24px;
+            background: linear-gradient(to bottom, #ffefd5, #ffe4b5);
+          "
+        >
+          {{ choice }}
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Feedback message and next button -->
+  <div id="feedback" class="alert text-center mt-3" style="display: none"></div>
+
+  <div
+    class="text-center d-flex justify-content-center align-items-center mt-4"
+  >
+    <a
+      href="{% url 'letter-bingo' %}"
+      id="next-button"
+      class="btn btn-success w-25"
+      style="display: none"
+    >
+      Continue
+    </a>
+  </div>
+</div>
+
+<script>
+  const correctWord = "{{ correct_answer }}"; // Correct word
+  const feedback = document.getElementById("feedback");
+  const nextButton = document.getElementById("next-button");
+
+  // Add event listeners to all choice buttons
+  document.querySelectorAll(".choice-button").forEach((button) => {
+    button.addEventListener("click", () => {
+      const selectedWord = button.getAttribute("data-word");
+
+      if (selectedWord === correctWord) {
+        // Correct guess
+        feedback.textContent = "Good work! Meaning: {{ definition }}";
+        feedback.className = "alert alert-success text-center mt-3";
+        feedback.style.display = "block";
+
+        // Change button style for correct answer
+        button.style.fontSize = "42px";
+        button.style.transition = "font-size 0.5s ease";
+
+        // Display the next button and disable choices
+        nextButton.style.display = "block";
+        disableAllButtons();
+      } else {
+        // Incorrect guess
+        feedback.textContent = "Try again!";
+        feedback.className = "alert alert-danger text-center mt-3";
+        feedback.style.display = "block";
+      }
+    });
+  });
+
+  // Disable all buttons after a correct answer
+  function disableAllButtons() {
+    document.querySelectorAll(".choice-button").forEach((button) => {
+      button.disabled = true;
+    });
+  }
+</script>
+{% endblock %}

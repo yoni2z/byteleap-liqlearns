@@ -1,0 +1,87 @@
+{% extends 'base.html' %} {% block content %}
+
+<div class="container py-5">
+  <h1
+    class="mb-5 text-center"
+    style="font-family: 'Fredoka One', sans-serif; color: #ff5733"
+  >
+    🌟 Upcoming Events 🌟
+  </h1>
+
+  {% if events %}
+  <div class="row g-4">
+    {% for event in events %}
+    <div class="col-md-6 col-lg-4">
+      <div
+        class="card h-100 shadow-lg"
+        style="
+          border-radius: 15px;
+          overflow: hidden;
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+        "
+        onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 10px 20px rgba(0, 0, 0, 0.2)';"
+        onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 5px 10px rgba(0, 0, 0, 0.1)';"
+      >
+        {% if event.image %}
+        <div style="height: 200px; overflow: hidden">
+          <img
+            src="{{ event.image.url }}"
+            class="card-img-top"
+            alt="{{ event.title }}"
+            style="height: 100%; object-fit: cover"
+          />
+        </div>
+        {% endif %}
+        <div
+          class="card-body"
+          style="background: linear-gradient(to bottom, #ffefd5, #ffe4b5)"
+        >
+          <h5
+            class="card-title text-center fw-bold"
+            style="font-family: 'Fredoka One', sans-serif; color: #2d4059"
+          >
+            {{ event.title }}
+          </h5>
+          <p class="card-text" style="font-size: 0.9rem; color: #555">
+            {{ event.description|truncatewords:20 }}
+          </p>
+          <ul class="list-unstyled">
+            <li>
+              <strong>🗓 Start Date:</strong> {{ event.start_date|date:"F j, Y, g:i a" }}
+            </li>
+            <li>
+              <strong>🗓 End Date:</strong> {{ event.end_date|date:"F j, Y, g:i a" }}
+            </li>
+            <li><strong>📍 Location:</strong> {{ event.location }}</li>
+          </ul>
+          <div class="text-center mt-3">
+            <a
+              href="#"
+              class="btn btn-primary w-100"
+              style="
+                font-family: 'Fredoka One', sans-serif;
+                background-color: #007bff;
+                border: none;
+              "
+            >
+              Register Now
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="alert alert-info text-center" role="alert">
+    <strong>😔 No upcoming events at the moment.</strong>
+  </div>
+  {% endif %}
+</div>
+
+<style>
+  /* Custom fonts and animations */
+  @import url("https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap");
+</style>
+
+{% endblock %}

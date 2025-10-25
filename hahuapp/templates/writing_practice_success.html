@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center" style="min-height: 60vh;">
+        <div class="col-md-6 text-center">
+            <h2 class="display-4 mb-4">Writing Submission Successful</h2>
+            <p class="lead mb-4">{{ feedback_message }}</p>
+            <a href="{% url 'writing_practice' %}" class="btn btn-primary w-100">Submit Another</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

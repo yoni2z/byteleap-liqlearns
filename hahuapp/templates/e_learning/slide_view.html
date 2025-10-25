@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <!-- Left side: Accordion for Levels, Modules, and Slides -->
+    <div class="col-md-4">
+      <div class="accordion" id="levelAccordion">
+        {% for level in levels %}
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="headingLevel{{ level.id }}">
+            <button
+              class="accordion-button {% if level.user_progress.is_locked %}disabled{% elif selected_slide and selected_slide.module.level.id == level.id %}{% else %}collapsed{% endif %}"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#collapseLevel{{ level.id }}"
+              aria-expanded="{% if selected_slide and selected_slide.module.level.id == level.id %}true{% else %}false{% endif %}"
+              aria-controls="collapseLevel{{ level.id }}"
+              {% if level.user_progress.is_locked %}disabled{% endif %}
+            >
+              {{ level.name }}
+            </button>
+          </h2>
+          <div
+            id="collapseLevel{{ level.id }}"
+            class="accordion-collapse collapse {% if selected_slide and selected_slide.module.level.id == level.id %}show{% endif %}"
+            data-bs-parent="#levelAccordion"
+          >
+            <div class="accordion-body">
+              <div class="accordion" id="moduleAccordion{{ level.id }}">
+                {% for module in level.modules.all %}
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="headingModule{{ module.id }}">
+                    <button
+                      class="accordion-button {% if module.user_progress.is_locked %}disabled{% elif selected_slide and selected_slide.module.id == module.id %}{% else %}collapsed{% endif %}"
+                      type="button"
+                      data-bs-toggle="collapse"
+                      data-bs-target="#collapseModule{{ module.id }}"
+                      aria-expanded="{% if selected_slide and selected_slide.module.id == module.id %}true{% else %}false{% endif %}"
+                      aria-controls="collapseModule{{ module.id }}"
+                      {% if module.user_progress.is_locked %}disabled{% endif %}
+                    >
+                      {{ module.name }}
+                    </button>
+                  </h2>
+                  <div
+                    id="collapseModule{{ module.id }}"
+                    class="accordion-collapse collapse {% if selected_slide and selected_slide.module.id == module.id %}show{% endif %}"
+                    data-bs-parent="#moduleAccordion{{ level.id }}"
+                  >
+                    <div class="accordion-body">
+                      <div style="display: flex; flex-wrap: wrap;">
+                        {% for slide in module.slides.all %}
+                            {% with user_slide_progress_dict|get_item:slide.id as progress %}
+                              <div
+                                  class="slide-item"
+                                  style="
+                                      margin: 10px;
+                                      padding: 10px;
+                                      border: 1px solid #ddd;
+                                      border-radius: 5px;
+                                      background-color: 
+                                      {% if progress.is_completed %}
+                                          rgb(189, 219, 196); /* Light green for completed */
+                                      {% else %}
+                                          white; /* White for in-progress */
+                                      {% endif %};
+                                      cursor: pointer;
+                                  "
+                                  
+                                  onclick="window.location.href='{% url 'view_slide' slide.id %}'"
+                              >
+                                {{ slide.title }}
+                              </div>
+                            {% endwith %}
+                        {% endfor %}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Right side: Content display for the selected slide -->
+    <div class="col-md-8">
+      <div id="slideContentArea">
+        {% if selected_slide %}
+        <h3>{{ selected_slide.title }}</h3>
+        {% for content in selected_slide.contents.all %}
+        {% if content.content_type == 'Text' %}
+        <p class="my-4">{{ content.text_content }}</p>
+        {% elif content.content_type == 'Image' %}
+        <img
+          src="{{ content.image_content.url }}"
+          class="img-fluid my-4"
+          alt="Slide Image"
+        />
+        {% elif content.content_type == 'Video' %}
+        <video controls class="my-4">
+          <source src="{{ content.video_content.url }}" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+        {% endif %}
+        {% endfor %}
+
+        {% if selected_slide.question %}
+          <div class="slide-question mt-4">
+            <div class="card shadow-sm">
+              <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Question</h5>
+              </div>
+              <div class="card-body">
+                <h4 class="card-title text-dark">{{ selected_slide.question.question_text }}</h4>
+                <form method="post" id="slide-question-form" action="{% url 'submit_slide_question' selected_slide.id %}">
+                  {% csrf_token %}
+                  <div class="form-check my-3 p-2 rounded border">
+                    <input
+                      class="form-check-input"
+                      type="radio"
+                      name="answer"
+                      value="1"
+                      id="choice1"
+                    />
+                    <label class="form-check-label ms-2" for="choice1">
+                      {{ selected_slide.question.choice1 }}
+                    </label>
+                  </div>
+                  <div class="form-check my-3 p-2 rounded border">
+                    <input
+                      class="form-check-input"
+                      type="radio"
+                      name="answer"
+                      value="2"
+                      id="choice2"
+                    />
+                    <label class="form-check-label ms-2" for="choice2">
+                      {{ selected_slide.question.choice2 }}
+                    </label>
+                  </div>
+                  <div class="form-check my-3 p-2 rounded border">
+                    <input
+                      class="form-check-input"
+                      type="radio"
+                      name="answer"
+                      value="3"
+                      id="choice3"
+                    />
+                    <label class="form-check-label ms-2" for="choice3">
+                      {{ selected_slide.question.choice3 }}
+                    </label>
+                  </div>
+                  <div class="form-check my-3 p-2 rounded border">
+                    <input
+                      class="form-check-input"
+                      type="radio"
+                      name="answer"
+                      value="4"
+                      id="choice4"
+                    />
+                    <label class="form-check-label ms-2" for="choice4">
+                      {{ selected_slide.question.choice4 }}
+                    </label>
+                  </div>
+                  <div class="d-flex justify-content-center mt-4">
+                    <button
+                      type="submit"
+                      class="btn btn-success w-50 shadow-sm"
+                    >
+                      Submit Answer
+                    </button>
+                  </div>
+                </form>
+                {% if messages %}
+                <div class="container mt-4">
+                  {% for message in messages %}
+                  <div class="alert alert-{{ message.tags }}" role="alert">
+                    {{ message }}
+                  </div>
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        <div class="mt-3">
+          {% if next_slide %}
+          <a
+            href="{% url 'view_slide' next_slide.id %}?mark_completed=true"
+            class="btn btn-primary"
+          >
+            Next Slide
+          </a>
+          {% else %}
+          <button class="btn btn-secondary" disabled>No More Slides</button>
+          {% endif %}
+        </div>
+        {% else %}
+        <h2>Select a slide to view its content</h2>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

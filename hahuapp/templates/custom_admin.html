@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Admin Dashboard</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            min-height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .sidebar {
+            width: 250px;
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-right: 1px solid #ddd;
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+        }
+        .card-custom {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+        .card-custom:hover {
+            transform: translateY(-5px);
+        }
+        .card-icon {
+            font-size: 48px;
+            color: #007bff;
+        }
+        #scrollButton {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <div class="text-center">
+            <h2>Admin Panel</h2>
+        </div>
+        <div class="list-group">
+            <a href="{% url 'custom_admin_page' %}" class="list-group-item list-group-item-action">Dashboard</a>
+            <a href="{% url 'user_profile_customadmin' %}" class="list-group-item list-group-item-action">User Profiles</a>
+            <a href="{% url 'events_page' %}" class="list-group-item list-group-item-action">Events</a>
+            <a href="{% url 'letter_sound_admin' %}" class="list-group-item list-group-item-action">Letter Sounds</a>
+            <a href="{% url 'word_audio_admin' %}" class="list-group-item list-group-item-action">Word Audio</a>
+            <a href="{% url 'word_video_admin' %}" class="list-group-item list-group-item-action">Word Video</a>
+            <a href="{% url 'letter_video_admin' %}" class="list-group-item list-group-item-action">Letter Video</a>
+            <a href="{% url 'letter_image_admin' %}" class="list-group-item list-group-item-action">Letter Images</a>
+            <a href="{% url 'admin_wordcountdown' %}" class="list-group-item list-group-item-action">Word Countdown</a>
+            <a href="{% url 'sentence_customadmin' %}" class="list-group-item list-group-item-action">Sentences</a>
+            <a href="{% url 'passage_customadmin' %}" class="list-group-item list-group-item-action">passage</a>
+            <a href="{% url 'descriptive_sentence_question_customadmin' %}" class="list-group-item list-group-item-action">descriptive sentences</a>
+            <a href="{% url 'descriptive_image_customadmin' %}" class="list-group-item list-group-item-action">descriptive Images</a>
+            <a href="{% url 'fill_in_the_blank_customadmin' %}" class="list-group-item list-group-item-action">Fill in the blank</a>
+            <a href="{% url 'numbers_customadmin' %}" class="list-group-item list-group-item-action">Numbers</a>
+            <a href="{% url 'writing_submission_customadmin' %}" class="list-group-item list-group-item-action">Writing submission</a>
+            <a href="{% url 'video_customadmin' %}" class="list-group-item list-group-item-action">Video</a>
+            <a href="{% url 'video_response_customadmin' %}" class="list-group-item list-group-item-action">Video Response</a>
+            <a href="{% url 'word_audio_recording_customadmin' %}" class="list-group-item list-group-item-action">Word Audio Recording</a>
+            <a href="{% url 'paragraph_customadmin' %}" class="list-group-item list-group-item-action">Paragraph</a>
+            <a href="{% url 'voice_recording_customadmin' %}" class="list-group-item list-group-item-action">Voice rec submission</a>
+            <a href="{% url 'paragraph_creation_customadmin' %}" class="list-group-item list-group-item-action">Paragraph creation</a>
+            <a href="{% url 'amharic_letter_family_customadmin' %}" class="list-group-item list-group-item-action">Amharic letter family</a>
+            <a href="{% url 'amharic_letter_audio_customadmin' %}" class="list-group-item list-group-item-action">Letter Audio</a>
+            <a href="{% url 'letter_fill_in_customadmin' %}" class="list-group-item list-group-item-action">Letter fill in</a>
+            <a href="{% url 'number_to_word_customadmin' %}" class="list-group-item list-group-item-action">Number to word</a>
+            <a href="{% url 'amharic_english_matching_customadmin' %}" class="list-group-item list-group-item-action">Amharic-english matching</a>
+            <a href="{% url 'sentence_synonym_customadmin' %}" class="list-group-item list-group-item-action">Sentence synonym</a>
+            <a href="{% url 'sentence_punctuation_customadmin' %}" class="list-group-item list-group-item-action">Sentence Punctuation</a>
+            <a href="{% url 'point_history_customadmin' %}" class="list-group-item list-group-item-action">Point History</a>
+
+            <a href="{% url 'story_customadmin' %}" class="list-group-item list-group-item-action">Stories</a>
+            <a href="{% url 'story_part_customadmin' %}" class="list-group-item list-group-item-action">Story part</a>
+            <a href="{% url 'story_question_customadmin' %}" class="list-group-item list-group-item-action">Story Questions</a>
+            <a href="{% url 'level_customadmin' %}" class="list-group-item list-group-item-action">Levels</a>
+            <a href="{% url 'module_customadmin' %}" class="list-group-item list-group-item-action">Modules</a>
+            <a href="{% url 'slide_customadmin' %}" class="list-group-item list-group-item-action">Slides</a>
+            <a href="{% url 'slide_content_customadmin' %}" class="list-group-item list-group-item-action">Slide Contents</a>
+            <a href="{% url 'slide_question_customadmin' %}" class="list-group-item list-group-item-action">Slide Questions</a>
+            <a href="{% url 'user_slide_progress_customadmin' %}" class="list-group-item list-group-item-action">User Slide Progress</a>
+            <a href="{% url 'user_level_progress_customadmin' %}" class="list-group-item list-group-item-action">User Level Progress</a>
+            <a href="{% url 'user_module_progress_customadmin' %}" class="list-group-item list-group-item-action">User Module Progress</a>
+
+
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <div class="header">
+            <div class="container">
+                <h1>Custom Admin Dashboard</h1>
+                <p class="fs-4 mt-3">Welcome back, {{ request.user.username }}! We're glad to have you here.</p>
+            </div>
+        </div>
+
+        <div class="container mt-5">
+            <h2 class="mb-4">General Stats</h2>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card card-custom">
+                        <div class="card-header text-center">
+                            <i class="bi bi-person-circle card-icon"></i>
+                            <h5 class="card-title">Total User Profiles</h5>
+                        </div>
+                        <div class="card-body text-center">
+                            <p class="card-text fs-3">{{ total_profiles }}</p>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: 75%;" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card card-custom">
+                        <div class="card-header text-center">
+                            <i class="bi bi-check-circle card-icon"></i>
+                            <h5 class="card-title">Subscribed Users</h5>
+                        </div>
+                        <div class="card-body text-center">
+                            <p class="card-text fs-3">{{ subscribed_profiles }}</p>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: 60%;" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scroll-to-Top Button -->
+    <button id="scrollButton" class="btn btn-primary rounded-circle">
+        <i class="bi bi-arrow-up"></i>
+    </button>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Show/hide button on scroll
+        const scrollButton = document.getElementById('scrollButton');
+        window.addEventListener('scroll', function () {
+            if (window.scrollY > 200) {
+                scrollButton.style.display = 'block';
+            } else {
+                scrollButton.style.display = 'none';
+            }
+        });
+
+        // Scroll to top functionality
+        scrollButton.addEventListener('click', function () {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container mt-5 mb-5">
+  <div class="row justify-content-center" style="min-height: 60vh">
+    <div class="col-md-6 text-center">
+      <h2 class="display-4 mb-4">Writing Practice</h2>
+      <p class="lead mb-4">
+        Write anything you'd like: About your day, your favorite hobby, or
+        anything that comes to mind!
+      </p>
+
+      <form method="POST" class="shadow p-4 rounded-3 bg-light">
+        {% csrf_token %} {{ form.as_p }}
+        <button
+          class="btn w-100 mt-3"
+          style="background: linear-gradient(to bottom, #ffefd5, #ffe4b5)"
+          type="submit"
+        >
+          Submit
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
